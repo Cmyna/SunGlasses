@@ -1,0 +1,37 @@
+{
+    "Options.SECTION[SunGlasses.SunGlasses.Mod]": "Sun Glasses",
+
+    "Options.GROUP[SunGlasses.SunGlasses.Mod.SunSettings]": "Sun",
+    "Options.GROUP[SunGlasses.SunGlasses.Mod.SkySettings]": "Sky",
+    "Options.GROUP[SunGlasses.SunGlasses.Mod.ExposureSettings]": "Exposure",
+    "Options.GROUP[SunGlasses.SunGlasses.Mod.MiscSettings]": "MISC",
+
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.SunSize]": "Sun Disk Size",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.SunSize]": "Control Sun Disk Size",
+
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.LensFlare]": "Lens Flare",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.LensFlare]": "Enable/Disable Lens Flare Effect",
+  
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.SunBloom]": "Sun Bloom Strength",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.SunBloom]": "Control Sun Bloom Strength(Attention, this option will affect global bloom strength)",
+  
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.SkyExposure]": "Sky Exposure",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.SkyExposure]": "Control Sky Exposure Strength, Increase this will Brighten the Ground",
+
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "Daytime Ambient Lighting",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "Control Ambient Lighting Strength During Day",
+  
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "Brighten Dark Area",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "Increase the Dark Area Exposure(May cause Overexposure of Bright Areas, Such as Sky)",
+
+    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[None]": "None",
+    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level1]": "Weak",
+    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level2]": "Medium",
+    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level3]": "Strong",
+
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset Default",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset to Default (Vanillia Effect)",
+    "Options.WARNING[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Are you sure setting everything to default?"
+
+
+  }

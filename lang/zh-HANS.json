@@ -1,0 +1,37 @@
+{
+  "Options.SECTION[SunGlasses.SunGlasses.Mod]": "太阳镜",
+  
+  "Options.GROUP[SunGlasses.SunGlasses.Mod.SunSettings]": "太阳",
+  "Options.GROUP[SunGlasses.SunGlasses.Mod.SkySettings]": "天空",
+  "Options.GROUP[SunGlasses.SunGlasses.Mod.ExposureSettings]": "曝光",
+  "Options.GROUP[SunGlasses.SunGlasses.Mod.MiscSettings]": "杂项",
+
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.SunSize]": "太阳圆盘大小",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.SunSize]": "控制太阳圆盘大小",
+
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.SunBloom]": "太阳泛光强度",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.SunBloom]": "控制太阳泛光强度（注意，该选项会影响到全局泛光强度）",
+
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.LensFlare]": "镜头炫光",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.LensFlare]": "启用/禁用 镜头炫光效果",
+
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.SkyExposure]": "天空曝光强度",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.SkyExposure]": "控制天空曝光强度，适量调高可提升地面亮度",
+
+  
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "白天环境光亮度",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "控制白天环境光强度",
+
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "暗部增亮",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "暗部曝光增亮（可能会使亮处产生过曝，例如天空）",
+
+  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[None]": "无",
+  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level1]": "弱",
+  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level2]": "中",
+  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level3]": "强",
+
+  
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认 (原版效果)",
+  "Options.WARNING[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "所有设置将重置为默认?"
+}
