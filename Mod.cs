@@ -8,6 +8,7 @@ using SunGlasses.Systems;
 using Game;
 using Game.Modding;
 using Game.SceneFlow;
+using Unity.Entities;
 
 namespace SunGlasses
 {
@@ -16,17 +17,21 @@ namespace SunGlasses
         public static ILog Log = LogManager.GetLogger($"{nameof(SunGlasses)}").SetShowsErrorsInUI(true);
         private Setting m_Setting;
 
+        private RemapLightingSystem _remapLightingSystem;
+
         public void OnLoad(UpdateSystem updateSystem)
         {
             Log.Info(nameof(OnLoad));
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset)) Log.Info($"Current mod asset at {asset.path}");
 
-            m_Setting = new Setting(this);
+            _remapLightingSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<RemapLightingSystem>();
+
+            m_Setting = new Setting(this, _remapLightingSystem);
             m_Setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new SimpleLocale(m_Setting));
 
-            AssetDatabase.global.LoadSettings(nameof(SunGlasses), m_Setting, new Setting(this));
+            AssetDatabase.global.LoadSettings(nameof(SunGlasses), m_Setting, new Setting(this, _remapLightingSystem));
 
             // update system
             updateSystem.UpdateBefore<RemapLightingSystem>(SystemUpdatePhase.Rendering);

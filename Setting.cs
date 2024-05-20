@@ -44,74 +44,43 @@ namespace SunGlasses
 
         public const float DefaultMultiplier = 1f;
 
-        // it seems that if missing properties related to members in class, the game will not save those properties on disk
-        private float _sunSize = DefaultMultiplier;
-        private float _sunBloom = DefaultMultiplier;
-        private float _sunLightIntensity = RemapLightingSystem.DefaultPbSunIntensity;
-        private bool _lensFlare = true;
-        private float _skyExposure = RemapLightingSystem.VanillaSkyExposure;
-        private float _indirectDiffuseSunLighting = RemapLightingSystem.VanillaIndirectDiffuseLighting;
-        private BrightenDarknessLevel _brightenLevel = BrightenDarknessLevel.None;
+        private RemapLightingSystem _remapLightingSystem;
 
-
-
-        public Setting(IMod mod) : base(mod)
+        public Setting(IMod mod, RemapLightingSystem remapLightingSystem) : base(mod)
         {
+            _remapLightingSystem = remapLightingSystem;
         }
 
         
         [SettingsUISlider(min = SunSizeMin, max = SunSizeMax, step = 0.05f, scaleDragVolume = true, scalarMultiplier = 1, unit = Unit.kFloatTwoFractions)]
         [SettingsUISection(ksMain, kgSun)]
-        public float SunSize
-        {
-            get => _sunSize;
-            set { _sunSize = value; RemapLightingSystem.SunSizeMultiplier = _sunSize; }
-        }
+        public float SunSize { get; set; }
 
 
-        
+
         [SettingsUISlider(min = 0, max = 130000, step = 100f, scaleDragVolume = true, scalarMultiplier = 10, unit = Unit.kInteger)]
         [SettingsUISection(ksMain, kgSun)]
         [SettingsUIHidden]
-        public float SunLightIntensity
-        {
-            get => _sunLightIntensity;
-            set { _sunLightIntensity = value; RemapLightingSystem.SunLightIntensity = _sunLightIntensity; }
-        }
+        public float SunLightIntensity { get; set; }
+
 
         [SettingsUISection(ksMain, kgSun)]
-        public bool LensFlare
-        {
-            get => _lensFlare;
-            set { _lensFlare = value; RemapLightingSystem.EnableLensFlare = _lensFlare; }
-        }
+        public bool LensFlare { get; set; }
 
-        
+
         [SettingsUISlider(min = SunBloomMin, max = SunBloomMax, step = 0.05f, scaleDragVolume = true, scalarMultiplier = 1, unit = Unit.kFloatTwoFractions)]
         [SettingsUISection(ksMain, kgSun)]
-        public float SunBloom 
-        {
-            get => _sunBloom;
-            set { _sunBloom = value; RemapLightingSystem.SunBloomMultiplier = _sunBloom; }
-        }
+        public float SunBloom { get; set; }
 
 
         [SettingsUISlider(min = SkyExposureMin, max = SkyExposureMax, step = 0.05f, scaleDragVolume = true, scalarMultiplier = 1, unit = Unit.kFloatTwoFractions)]
         [SettingsUISection(ksMain, kgSky)]
-        public float SkyExposure
-        {
-            get => _skyExposure;
-            set { _skyExposure = value; RemapLightingSystem.SkyExposure = _skyExposure; }
-        }
+        public float SkyExposure { get; set; }
 
 
         [SettingsUISlider(min = 1, max = 4, step = 0.05f, scaleDragVolume = true, scalarMultiplier = 1, unit = Unit.kFloatTwoFractions)]
         [SettingsUISection(ksMain, kgSky)]
-        public float IndirectDiffuseSunLighting
-        {
-            get => _indirectDiffuseSunLighting;
-            set { _indirectDiffuseSunLighting = value; RemapLightingSystem.IndirectLightingMultipilier = _indirectDiffuseSunLighting; }
-        }
+        public float IndirectDiffuseSunLighting { get; set; }
 
         /*
         [SettingsUISlider(min = 0, max = 15, step = 0.05f, scalarMultiplier = 1, unit = Unit.kFloatTwoFractions)]
@@ -121,11 +90,7 @@ namespace SunGlasses
 
         [SettingsUISection(ksMain, kgExposure)]
         //[SettingsUIHidden]
-        public BrightenDarknessLevel BrightenLevel
-        {
-            get => _brightenLevel;
-            set { _brightenLevel = value; RemapLightingSystem.BrightenDarknessLevel = (int)_brightenLevel; }
-        }
+        public BrightenDarknessLevel BrightenLevel { get; set; }
 
         public DropdownItem<int>[] GetIntDropdownItems()
         {
@@ -157,9 +122,11 @@ namespace SunGlasses
             set
             {
                 SetDefaults(); // Apply defaults.
-                EnsureUpdate(); 
+                EnsureUpdate();
+                base.Apply();
             }
         }
+
 
         /// <summary>
         /// set hidden setting value not default to force game update settings to storage(when others under default)
@@ -194,8 +161,23 @@ namespace SunGlasses
             RemapLightingSystem.InternalVolumePriority = 2500;
         }
 
-        
-        
+        public override void Apply()
+        {
+            base.Apply();
+
+            RemapLightingSystem.AutoHistgramIndex = (int)BrightenLevel;
+            RemapLightingSystem.EnableLensFlare = LensFlare;
+            RemapLightingSystem.IndirectLightingMultipilier = IndirectDiffuseSunLighting;
+            RemapLightingSystem.InternalVolumePriority = 2500;
+            RemapLightingSystem.SkyExposure = SkyExposure;
+            RemapLightingSystem.SunBloomMultiplier = SunBloom;
+            RemapLightingSystem.SunLightIntensity = SunLightIntensity;
+            RemapLightingSystem.SunSizeMultiplier = SunSize;
+
+            _remapLightingSystem.dirty = true;
+        }
+
+
 
     }
 
@@ -233,7 +215,7 @@ namespace SunGlasses
                 //{ m_Setting.GetOptionLabelLocaleID(nameof(Setting.GroundDiffuseLight) ), "Ground Diffuse Light Strength" },
                 //{ m_Setting.GetOptionDescLocaleID(nameof(Setting.GroundDiffuseLight) ), "Ground Diffuse Light Strength" },
 
-                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.BrightenLevel) ), "EnLight Darkness" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.BrightenLevel) ), "Brighten Dark Area" },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ResetModSettings)), "Reset To Default" },
                 { m_Setting.GetOptionWarningLocaleID(nameof(Setting.ResetModSettings)), "Are you sure setting everything to default?" },

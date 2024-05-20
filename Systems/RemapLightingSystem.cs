@@ -5,6 +5,7 @@
 using Game;
 using Game.Rendering;
 using Game.Simulation;
+using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
@@ -12,7 +13,7 @@ using UnityEngine.Rendering.HighDefinition;
 namespace SunGlasses.Systems
 {
     // TODO: enable/disable lensflare function
-    partial class RemapLightingSystem : GameSystemBase
+    public partial class RemapLightingSystem : GameSystemBase
     {
 
         public const string kLightingPostprocessVolume = "LightingPostProcessVolume";
@@ -50,7 +51,7 @@ namespace SunGlasses.Systems
 
         internal static float SkyExposure = VanillaSkyExposure;
 
-        internal static int BrightenDarknessLevel = 0;
+        internal static int AutoHistgramIndex = 0;
 
         internal static float SunLightIntensity = DefaultPbSunIntensity;
 
@@ -65,7 +66,7 @@ namespace SunGlasses.Systems
             {0, 20}
         };
 
-
+        public bool dirty = false;
 
         private Volume remapVolume;
 
@@ -75,18 +76,6 @@ namespace SunGlasses.Systems
 
         private PlanetarySystem planetarySystem;
 
-        private VanillaLighting vanillaLighting = default;
-
-        private LensFlareComponentSRP lensFlareComponent;
-
-
-        public struct VanillaLighting
-        {
-            public Volume volume;
-            public VolumeProfile profile;
-            public PhysicallyBasedSky sky;
-            public IndirectLightingController indirectLightingController;
-        }
 
         protected override void OnCreate()
         {
@@ -94,32 +83,34 @@ namespace SunGlasses.Systems
             remapVolume = VolumeHelper.CreateVolume("RemapLightVolume", InternalVolumePriority);
             VolumeHelper.GetOrCreateVolumeComponent(remapVolume, ref globalBloom);
             VolumeHelper.GetOrCreateVolumeComponent(remapVolume, ref lightExposure);
-            lightExposure.mode.Override(ExposureMode.AutomaticHistogram);
+            lightExposure.mode.value = ExposureMode.AutomaticHistogram;
             planetarySystem = World.GetOrCreateSystemManaged<PlanetarySystem>();
         }
 
         protected override void OnUpdate()
         {
+            if (!dirty) return;
             UpdatePriority();
-            TryGetVanillaLightingVolume();
-
-            // sun properties override
-            OverrideSunSize(SunSizeMultiplier);
-            OverrideSunBloom(SunBloomMultiplier);
 
             // override vanilla lighting system
             TryUpdateVanillaLighting();
-
-            BrightenDarkExposure(BrightenDarknessLevel);
-
+            UpdateAutoExposure();
             TryUpdateLensFlareComponent();
+
+            OverrideSunSize(SunSizeMultiplier);
+            OverrideSunBloom(SunBloomMultiplier);
+
         }
 
 
         public void OverrideSunSize(float weight)
         {
             var sunLight = planetarySystem.SunLight;
-            if (!sunLight.isValid) return;
+            if (!sunLight.isValid)
+            {
+                dirty = true;
+                return;
+            }
             var additionalData = sunLight.additionalData;
             additionalData.angularDiameter = VanillaAngularDiameter * weight;
             additionalData.flareSize = VanillaFlareSize * weight;
@@ -132,15 +123,19 @@ namespace SunGlasses.Systems
             globalBloom.intensity.Override(VanillaBloom * weight);
         }
 
-        public void BrightenDarkExposure(int level)
+        public void UpdateAutoExposure()
         {
-            if (lightExposure == null) return;
-            if (level > 3 || level < 0) return;
-            lightExposure.histogramPercentages.overrideState = true;
-            var x = AutoHistgramLevels[level, 0];
-            var y = AutoHistgramLevels[level, 1];
-            // should use Override method to make it work
-            lightExposure.histogramPercentages.Override(new Vector2 { x = x, y = y });
+            if (lightExposure == null)
+            {
+                dirty = true;
+                return;
+            }
+            if (AutoHistgramIndex > 3 || AutoHistgramIndex < 0) return;
+            lightExposure.mode.overrideState = AutoHistgramIndex != 0;
+            lightExposure.histogramPercentages.overrideState = AutoHistgramIndex != 0;
+            var x = AutoHistgramLevels[AutoHistgramIndex, 0];
+            var y = AutoHistgramLevels[AutoHistgramIndex, 1];
+            lightExposure.histogramPercentages.value = new Vector2 { x = x, y = y };
         }
 
 
@@ -149,9 +144,13 @@ namespace SunGlasses.Systems
         /// </summary>
         private void TryUpdateVanillaLighting()
         {
-            if (vanillaLighting.sky == null || vanillaLighting.indirectLightingController == null) return;
-            vanillaLighting.sky.exposure.Override(SkyExposure);
-            vanillaLighting.indirectLightingController.indirectDiffuseLightingMultiplier.Override(IndirectLightingMultipilier);
+            if (!TryGetVanillaLighting(out var volume, out var sky, out var controller))
+            {
+                dirty = true;
+                return;
+            }
+            sky.exposure.Override(SkyExposure);
+            controller.indirectDiffuseLightingMultiplier.Override(IndirectLightingMultipilier);
         }
 
         private void UpdatePriority()
@@ -160,34 +159,37 @@ namespace SunGlasses.Systems
             if (VolumePriority.overrideState) priority = VolumePriority.value;
             if (remapVolume.priority != priority) remapVolume.priority = priority;
         }
-        
-        private void TryGetVanillaLightingVolume()
-        {
-            if (vanillaLighting.volume == null)
-            {
-                vanillaLighting.volume = GameObject.Find(kLightingPostprocessVolume).GetComponent<Volume>();
-            } else
-            {
-                var profile = vanillaLighting.volume.profile;
-                if (vanillaLighting.sky == null) profile.TryGet(out vanillaLighting.sky);
-                if (vanillaLighting.indirectLightingController == null) profile.TryGet(out vanillaLighting.indirectLightingController);
-            }
-            
-        }
 
         private void TryUpdateLensFlareComponent()
         {
-            // the LensFlareComponent under same object with HDAdditionalData
-            if (lensFlareComponent == null && planetarySystem.SunLight.isValid )
+            if (!TryGetLensFlareComponent(out var comp))
             {
-                var sunLightGo = planetarySystem.SunLight.additionalData?.gameObject;
-                sunLightGo?.TryGetComponent(out lensFlareComponent);
+                dirty = true;
+                return;
             }
-            if (lensFlareComponent != null && (EnableLensFlare != lensFlareComponent.enabled))
-            {
-                lensFlareComponent.enabled = EnableLensFlare;
-            }
+            comp.enabled = EnableLensFlare;
         }
 
+
+        private bool TryGetLensFlareComponent(out LensFlareComponentSRP component)
+        {
+            component = null;
+            if (!planetarySystem.SunLight.isValid) return false;
+            var sunLightGo = planetarySystem.SunLight.additionalData?.gameObject;
+            sunLightGo?.TryGetComponent(out component);
+            return component != null;
+        }
+
+        private bool TryGetVanillaLighting(
+            out Volume volume, 
+            out PhysicallyBasedSky sky, 
+            out IndirectLightingController controller
+        ) {
+            sky = null; controller = null;
+            volume = GameObject.Find(kLightingPostprocessVolume).GetComponent<Volume>();
+            if (volume == null) return false;
+            var profile = volume.profile;
+            return profile.TryGet(out sky) && profile.TryGet(out controller);
+        }
     }
 }
