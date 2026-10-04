@@ -8,26 +8,26 @@ namespace SunGlasses.Debugging
     {
         internal static List<DebugUI.Widget> Build()
         {
-            var controller = ExposureCalibrationController.Instance;
+            var controller = ExposureDebugSystem.Instance?.Controller;
             if (controller == null) return null;
 
             var widgets = new List<DebugUI.Widget>
             {
-                new DebugUI.Value { displayName = "Active exposure curve", getter = () => controller.ActiveCurve },
+                new DebugUI.Value { displayName = "Calibration sample source", getter = () => controller.ActiveCurve },
                 new DebugUI.Button { displayName = "Use bright curve", action = () => controller.SwitchCurve("bright") },
                 new DebugUI.Button { displayName = "Use realistic curve", action = () => controller.SwitchCurve("realistic") },
                 new DebugUI.Button { displayName = "Use custom samples", action = () => controller.SwitchCurve("Custom") },
                 new DebugUI.BoolField
                 {
-                    displayName = "Preview exposure bounds",
+                    displayName = "Manual calibration preview",
                     getter = () => controller.PreviewEnabled,
                     setter = value => controller.PreviewEnabled = value
                 },
                 new DebugUI.BoolField
                 {
-                    displayName = "Interpolate samples by solar angle",
-                    getter = () => controller.InterpolationEnabled,
-                    setter = value => controller.InterpolationEnabled = value
+                    displayName = "Enable dynamic exposure",
+                    getter = () => controller.DynamicEnabled,
+                    setter = value => controller.DynamicEnabled = value
                 },
                 new DebugUI.TextField
                 {
@@ -51,11 +51,11 @@ namespace SunGlasses.Debugging
                 new DebugUI.Value { displayName = "Solar elevation", getter = controller.SolarElevation },
                 new DebugUI.Value { displayName = "Solar arc angle", getter = controller.SolarArcAngleText },
                 new DebugUI.Value { displayName = "Active interpolation samples", getter = controller.ActiveInterpolationSamples },
-                new DebugUI.Value { displayName = "Interpolated bounds", getter = controller.InterpolatedRange },
+                new DebugUI.Value { displayName = "Applied exposure bounds", getter = controller.AppliedRange },
                 new DebugUI.Value { displayName = "Effective camera bounds", getter = controller.EffectiveRange },
-                new DebugUI.Value { displayName = "Average relative luminance", getter = controller.AverageScreenBrightness },
-                new DebugUI.Value { displayName = "Relative luminance P50", getter = controller.MedianScreenBrightness },
                 new DebugUI.Value { displayName = "Preview check", getter = controller.PreviewCheck },
+                new DebugUI.Value { displayName = "Runtime exposure curve", getter = () => controller.RuntimeCurve },
+                new DebugUI.Button { displayName = "Apply custom curve", action = controller.ApplyCustomCurve },
                 new DebugUI.Button { displayName = "Record sample", action = controller.Record },
                 new DebugUI.Value { displayName = "Parameter file", getter = () => controller.FilePath },
                 new DebugUI.Value { displayName = "Status", getter = () => controller.Status }

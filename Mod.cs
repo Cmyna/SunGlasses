@@ -20,6 +20,8 @@ namespace SunGlasses
         private Setting m_Setting;
 
         private RemapLightingSystem _remapLightingSystem;
+        private DynamicExposureSystem _dynamicExposureSystem;
+        private ExposureDebugSystem _exposureDebugSystem;
 
         public void OnLoad(UpdateSystem updateSystem)
         {
@@ -29,7 +31,8 @@ namespace SunGlasses
 
             _remapLightingSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<RemapLightingSystem>();
             _remapLightingSystem.Enabled = true;
-            ExposureCalibrationController.Install();
+            _dynamicExposureSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<DynamicExposureSystem>();
+            _exposureDebugSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<ExposureDebugSystem>();
             AtmosphereDebugController.Install();
 
             m_Setting = new Setting(this, _remapLightingSystem);
@@ -43,12 +46,15 @@ namespace SunGlasses
             // update system
             // Copy this frame's sun after vanilla updates its intensity and color.
             updateSystem.UpdateAfter<RemapLightingSystem, LightingSystem>(SystemUpdatePhase.PreCulling);
+            updateSystem.UpdateAfter<DynamicExposureSystem, RemapLightingSystem>(SystemUpdatePhase.PreCulling);
+            updateSystem.UpdateAt<ExposureDebugSystem>(SystemUpdatePhase.MainLoop);
         }
 
         public void OnDispose()
         {
             Log.Info(nameof(OnDispose));
-            ExposureCalibrationController.Uninstall();
+            if (_exposureDebugSystem != null) { _exposureDebugSystem.Enabled = false; _exposureDebugSystem.Shutdown(); }
+            if (_dynamicExposureSystem != null) { _dynamicExposureSystem.Enabled = false; _dynamicExposureSystem.Shutdown(); }
             AtmosphereDebugController.Uninstall();
             if (_remapLightingSystem != null)
             {

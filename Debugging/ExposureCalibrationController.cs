@@ -4,22 +4,17 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-using Game.Rendering;
-using Game.Simulation;
 using SunGlasses.Systems;
-using Unity.Entities;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 
 namespace SunGlasses.Debugging
 {
     // Calibration samples are deliberately separate from the mod's normal settings.
-    public sealed class ExposureCalibrationController : MonoBehaviour
+    public sealed class ExposureCalibrationController
     {
         private const float MinimumEv = -10f;
         private const float MaximumEv = 20f;
-        private const float PreviewPriority = 3000f;
         private const string FileName = "exposure-calibration.json";
 
         [Serializable]
@@ -47,51 +42,33 @@ namespace SunGlasses.Debugging
             public Sample[] samples = Array.Empty<Sample>();
         }
 
-        public static ExposureCalibrationController Instance { get; private set; }
 
         private readonly List<Sample> _samples = new List<Sample>();
-        private Volume _volume;
-        private VolumeProfile _profile;
-        private Exposure _exposure;
-        private PlanetarySystem _planetary;
+        private readonly DynamicExposureSystem _runtime;
+        private readonly ExposureDebugSystem _debug;
+        public event Action SamplesChanged;
         private bool _previewEnabled;
-        private bool _interpolationEnabled;
         private bool _samplesLoadFailed;
         public string ActiveCurve { get; private set; } = "Custom";
-        private bool _timeOverrideOwned;
-        private bool _previousTimeOverride;
-        private float _previousTime;
         private float _center = 11.5f;
         private float _width = 1f;
         private string _timeText = "12";
         private string _centerText = "11.5";
         private string _widthText = "1";
         private string _status = "Ready";
-        private ScreenBrightnessMonitor _brightness;
-
-        public string AverageScreenBrightness() => _brightness != null ? _brightness.AverageText() : "Waiting for brightness monitor";
-        public string MedianScreenBrightness() => _brightness != null ? _brightness.MedianText() : "Waiting for brightness monitor";
-
         public IReadOnlyList<Sample> Samples => _samples;
         public bool PreviewEnabled
         {
             get => _previewEnabled;
             set { _previewEnabled = value; ApplyPreview(); }
         }
-        public bool InterpolationEnabled
+        public bool DynamicEnabled
         {
-            get => _interpolationEnabled;
+            get => _runtime.DynamicEnabled;
             set
             {
-                if (value && _samples.Count == 0)
-                {
-                    _status = "Record a sample before enabling interpolation";
-                    return;
-                }
-                _interpolationEnabled = value;
-                if (value) _previewEnabled = true;
-                ApplyPreview();
-                _status = value ? "Sample interpolation enabled" : "Manual exposure bounds enabled";
+                _runtime.DynamicEnabled = value;
+                _status = value ? "Dynamic exposure enabled" : "Dynamic exposure disabled";
             }
         }
         public string CenterText
@@ -107,7 +84,6 @@ namespace SunGlasses.Debugging
                     return;
                 }
                 _center = center;
-                _interpolationEnabled = false;
                 _previewEnabled = true;
                 ApplyPreview();
                 _status = "Exposure bounds applied";
@@ -126,7 +102,6 @@ namespace SunGlasses.Debugging
                     return;
                 }
                 _width = width;
-                _interpolationEnabled = false;
                 _previewEnabled = true;
                 ApplyPreview();
                 _status = "Exposure bounds applied";
@@ -143,16 +118,7 @@ namespace SunGlasses.Debugging
                     _status = "Enter decimal hours from 0 to less than 24";
                     return;
                 }
-                BindPlanetary();
-                if (_planetary == null) { _status = "Waiting for planetary system"; return; }
-                if (!_timeOverrideOwned)
-                {
-                    _previousTimeOverride = _planetary.overrideTime;
-                    _previousTime = _planetary.time;
-                    _timeOverrideOwned = true;
-                }
-                _planetary.overrideTime = true;
-                _planetary.time = hours;
+                _debug.SetTime(hours);
                 _status = "Time applied";
             }
         }
@@ -177,15 +143,16 @@ namespace SunGlasses.Debugging
                     }
                 }
                 if (curve != "Custom" && loaded.Count == 0) throw new InvalidDataException("Exposure curve has no samples");
+                var runtimeCurve = curve == "Custom" ? null : ExposureCurve.LoadBundled(curve);
                 _samples.Clear();
                 _samples.AddRange(loaded);
                 ActiveCurve = curve;
                 if (curve == "Custom") _samplesLoadFailed = false;
-                _interpolationEnabled = loaded.Count > 0;
-                _previewEnabled = _interpolationEnabled;
+                if (curve != "Custom") _runtime.SetCurve(runtimeCurve, curve);
+                _previewEnabled = false;
                 ApplyPreview();
                 _status = "Using " + curve + ": " + loaded.Count + " samples";
-                ExposureCalibrationDebugTab.Rebuild();
+                SamplesChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -194,198 +161,36 @@ namespace SunGlasses.Debugging
             }
         }
 
-        public static ExposureCalibrationController Install()
+        public ExposureCalibrationController(DynamicExposureSystem runtime, ExposureDebugSystem debug)
         {
-            if (Instance != null) return Instance;
-            var host = new GameObject("SunGlasses Exposure Calibration");
-            DontDestroyOnLoad(host);
-            Instance = host.AddComponent<ExposureCalibrationController>();
-            Instance.SwitchCurve("realistic");
-            return Instance;
-        }
-
-        public static void Uninstall()
-        {
-            if (Instance == null) return;
-            Destroy(Instance.gameObject);
-            Instance = null;
-        }
-
-        private void Awake()
-        {
-            _brightness = gameObject.AddComponent<ScreenBrightnessMonitor>();
+            _runtime = runtime; _debug = debug;
             LoadSamples();
-            BindPlanetary();
-            if (_planetary != null) _timeText = FormatTime(_planetary.time);
+            SwitchCurve("realistic");
         }
-
-        private void LateUpdate()
-        {
-            BindPlanetary();
-            if (_volume == null) CreateVolume();
-            if (_volume != null && _previewEnabled) ApplyPreview();
-        }
-
-        private void BindPlanetary()
-        {
-            var world = World.DefaultGameObjectInjectionWorld;
-            var current = world != null && world.IsCreated ? world.GetExistingSystemManaged<PlanetarySystem>() : null;
-            if (current == _planetary) return;
-            RestoreTime();
-            _planetary = current;
-        }
-
-        private void CreateVolume()
-        {
-            var original = GameObject.Find(RemapLightingSystem.kLightingPostprocessVolume);
-            if (original == null) return;
-            gameObject.layer = original.layer;
-            _profile = ScriptableObject.CreateInstance<VolumeProfile>();
-            _profile.name = "SunGlasses Exposure Calibration Profile";
-            // Add(false) leaves every Exposure parameter uninvolved until explicitly enabled.
-            // Add(true) overrides mode as Fixed at 0 EV, making the scene white regardless of bounds.
-            _exposure = _profile.Add<Exposure>(false);
-            _exposure.limitMin.overrideState = true;
-            _exposure.limitMax.overrideState = true;
-            _volume = gameObject.AddComponent<Volume>();
-            _volume.isGlobal = true;
-            _volume.priority = PreviewPriority;
-            _volume.weight = 1f;
-            _volume.sharedProfile = _profile;
-            ApplyPreview();
-        }
-
         private void ApplyPreview()
         {
-            if (_volume == null || _exposure == null) return;
-            if (!_previewEnabled)
+            if (_previewEnabled) _runtime.SetManualOverride(_center - _width / 2, _center + _width / 2);
+            else _runtime.ClearManualOverride();
+        }
+        public void ResetPreview() { _previewEnabled = false; _runtime.ClearManualOverride(); }
+        public void ApplyCustomCurve()
+        {
+            if (ActiveCurve != "Custom" || _samples.Count == 0) { _status = "Select Custom and record samples first"; return; }
+            var points = new ExposureCurve.Point[_samples.Count];
+            for (int i = 0; i < points.Length; i++)
             {
-                _volume.enabled = false;
-                return;
+                var p = _samples[i];
+                points[i] = new ExposureCurve.Point { timeOfDayHours = p.timeOfDayHours, solarElevationDegrees = p.solarElevationDegrees,
+                    centerEv100 = p.centerEv100, widthEv100 = p.widthEv100 };
             }
-            if (_interpolationEnabled && !TryInterpolatedBounds(out _, out _))
-            {
-                _volume.enabled = false;
-                return;
-            }
-            GetPreviewBounds(out var minimum, out var maximum);
-            _exposure.limitMin.value = minimum;
-            _exposure.limitMax.value = maximum;
-            _volume.enabled = _previewEnabled;
+            try { _runtime.SetCurve(new ExposureCurve(points), "Custom"); ResetPreview(); _status = "Custom curve applied"; }
+            catch (Exception ex) { _status = "Custom curve rejected: " + ex.Message; }
         }
-
-        private void GetPreviewBounds(out float minimum, out float maximum)
-        {
-            if (_interpolationEnabled && TryInterpolatedBounds(out minimum, out maximum)) return;
-            minimum = _center - _width * 0.5f;
-            maximum = _center + _width * 0.5f;
-        }
-
-        private bool TryInterpolatedBounds(out float minimum, out float maximum)
-        {
-            return TryInterpolatedBounds(out minimum, out maximum, out _, out _, out _, out _, out _);
-        }
-
-        private bool TryInterpolatedBounds(out float minimum, out float maximum,
-            out Sample before, out Sample after, out float beforeAngle, out float afterAngle,
-            out float fraction)
-        {
-            minimum = maximum = 0f;
-            before = after = null;
-            beforeAngle = float.NegativeInfinity;
-            afterAngle = float.PositiveInfinity;
-            fraction = 0f;
-            if (!HasReadySun() || _samples.Count == 0) return false;
-
-            var currentAngle = CurrentSolarArcAngle();
-            Sample first = null;
-            Sample last = null;
-            var firstAngle = float.PositiveInfinity;
-            var lastAngle = float.NegativeInfinity;
-
-            foreach (var sample in _samples)
-            {
-                var recordedAngle = SolarArcAngle(sample.solarElevationDegrees, sample.timeOfDayHours);
-                for (var side = 0; side < 2; side++)
-                {
-                    var angle = side == 0 ? recordedAngle : MirrorAngle(recordedAngle);
-                    if (angle < firstAngle) { firstAngle = angle; first = sample; }
-                    if (angle > lastAngle) { lastAngle = angle; last = sample; }
-                    if (angle <= currentAngle && angle >= beforeAngle) { beforeAngle = angle; before = sample; }
-                    if (angle >= currentAngle && angle <= afterAngle) { afterAngle = angle; after = sample; }
-                }
-            }
-            if (before == null) { before = last; beforeAngle = lastAngle; }
-            if (after == null) { after = first; afterAngle = firstAngle; }
-            var span = Mathf.Repeat(afterAngle - beforeAngle, 360f);
-            fraction = span > 0f ? Mathf.Repeat(currentAngle - beforeAngle, 360f) / span : 0f;
-            minimum = Mathf.Lerp(before.centerEv100 - before.widthEv100 * 0.5f,
-                after.centerEv100 - after.widthEv100 * 0.5f, fraction);
-            maximum = Mathf.Lerp(before.centerEv100 + before.widthEv100 * 0.5f,
-                after.centerEv100 + after.widthEv100 * 0.5f, fraction);
-            return true;
-        }
-
-        private bool HasReadySun()
-        {
-            // SunLight can be valid before its scene Transform exists (main menu
-            // and scene transitions). Keep the override dormant until both are ready.
-            return _planetary != null && _planetary.SunLight.isValid
-                && _planetary.SunLight.transform != null && Finite(_planetary.time);
-        }
-
-        private float CurrentSolarArcAngle()
-        {
-            var y = Mathf.Clamp(-_planetary.SunLight.transform.forward.y, -1f, 1f);
-            return SolarArcAngle(Mathf.Asin(y) * Mathf.Rad2Deg, _planetary.time);
-        }
-
-        private static float SolarArcAngle(float elevation, float timeOfDayHours)
-        {
-            // Time only selects which half of the arc the sun is on. Interpolation
-            // distances come exclusively from solar angles.
-            return Mathf.Repeat(timeOfDayHours, 24f) < 12f ? elevation : MirrorAngle(elevation);
-        }
-
-        private static float MirrorAngle(float angle)
-        {
-            return angle >= 0f ? 180f - angle : -180f - angle;
-        }
-
-        public string SolarArcAngleText()
-        {
-            if (!HasReadySun()) return "Waiting for sun";
-            return CurrentSolarArcAngle().ToString("F3", CultureInfo.InvariantCulture) + "°";
-        }
-
-        public string InterpolatedRange()
-        {
-            if (!_interpolationEnabled) return "Off";
-            if (!TryInterpolatedBounds(out var minimum, out var maximum)) return "Waiting for sun or current game time";
-            return string.Format(CultureInfo.InvariantCulture, "{0:F3} .. {1:F3} EV100", minimum, maximum);
-        }
-
-        public string ActiveInterpolationSamples()
-        {
-            if (!_interpolationEnabled) return "Off (manual bounds)";
-            if (!_previewEnabled) return "Off (preview disabled)";
-            if (!TryInterpolatedBounds(out _, out _, out var before, out var after,
-                out var beforeAngle, out var afterAngle, out var fraction))
-                return "Waiting for samples, sun or current game time";
-
-            return string.Format(CultureInfo.InvariantCulture, "{0} -> {1}  t={2:F3}",
-                InterpolationSampleLabel(before, beforeAngle),
-                InterpolationSampleLabel(after, afterAngle), fraction);
-        }
-
-        private string InterpolationSampleLabel(Sample sample, float angle)
-        {
-            var recordedAngle = SolarArcAngle(sample.solarElevationDegrees, sample.timeOfDayHours);
-            return string.Format(CultureInfo.InvariantCulture, "Sample {0} ({1:F3}°{2})",
-                _samples.IndexOf(sample) + 1, angle,
-                Mathf.Approximately(angle, recordedAngle) ? string.Empty : ", mirrored");
-        }
-
+        public string SolarElevation() { var s = _runtime.GetSnapshot(); return s.Ready ? s.SolarElevationDegrees.ToString("F3", CultureInfo.InvariantCulture) + "°" : "Waiting for sun / exposure"; }
+        public string SolarArcAngleText() { var s = _runtime.GetSnapshot(); return s.Ready ? ExposureCurve.SolarArcAngle(s.SolarElevationDegrees, s.TimeOfDayHours).ToString("F3", CultureInfo.InvariantCulture) + "°" : "Waiting for sun / exposure"; }
+        public string AppliedRange() { var s = _runtime.GetSnapshot(); return s.Ready ? string.Format(CultureInfo.InvariantCulture, "{0:F3} .. {1:F3} EV100", s.MinimumEv100, s.MaximumEv100) : "Waiting for sun / exposure"; }
+        public string ActiveInterpolationSamples() => _runtime.InterpolationDescription;
+        public string RuntimeCurve => _runtime.ActiveCurve;
         public string EffectiveRange()
         {
             var camera = Camera.main;
@@ -394,88 +199,38 @@ namespace SunGlasses.Debugging
             return exposure == null ? "Waiting for camera stack" :
                 string.Format(CultureInfo.InvariantCulture, "{0:F3} .. {1:F3} EV100 ({2})", exposure.limitMin.value, exposure.limitMax.value, exposure.mode.value);
         }
-
         public string PreviewCheck()
         {
-            if (!_previewEnabled) return "Off: game volumes control exposure";
-            if (_volume == null) return "Waiting for lighting volume";
-            if (_interpolationEnabled && !_volume.enabled) return "Waiting for sun or current game time";
-            for (var i = 0; i < _exposure.parameters.Count; i++)
-            {
-                var parameter = _exposure.parameters[i];
-                if (parameter != _exposure.limitMin && parameter != _exposure.limitMax && parameter.overrideState)
-                    return "Unexpected Exposure override (mode or other setting)";
-            }
+            if (!_runtime.ManualOverrideEnabled && !_runtime.DynamicEnabled) return "Off: game volumes control exposure";
+            var snapshot = _runtime.GetSnapshot();
+            if (!snapshot.Ready) return "Waiting for sun or lighting volume";
             var camera = Camera.main;
             if (camera == null) return "Waiting for main camera";
             var effective = HDCamera.GetOrCreate(camera, 0).volumeStack?.GetComponent<Exposure>();
             if (effective == null) return "Waiting for camera stack";
             if (effective.mode.value != ExposureMode.Automatic && effective.mode.value != ExposureMode.AutomaticHistogram)
-                return "Bounds match, but effective exposure mode is " + effective.mode.value;
-            return Mathf.Abs(effective.limitMin.value - _exposure.limitMin.value) < 0.01f &&
-                   Mathf.Abs(effective.limitMax.value - _exposure.limitMax.value) < 0.01f
-                ? "Applied to main camera"
-                : "Mismatch: check camera layer mask or competing Volume";
+                return "Effective exposure mode is " + effective.mode.value;
+            return Mathf.Abs(effective.limitMin.value - snapshot.MinimumEv100) < 0.01f &&
+                Mathf.Abs(effective.limitMax.value - snapshot.MaximumEv100) < 0.01f
+                ? "Applied to main camera" : "Mismatch: check camera layer mask or competing Volume";
         }
-
-        public string SolarElevation()
-        {
-            if (!HasReadySun()) return "Waiting for sun";
-            var y = Mathf.Clamp(-_planetary.SunLight.transform.forward.y, -1f, 1f);
-            return (Mathf.Asin(y) * Mathf.Rad2Deg).ToString("F3", CultureInfo.InvariantCulture) + "°";
-        }
-
-        public void ReleaseTime()
-        {
-            RestoreTime();
-            if (_planetary != null) _timeText = FormatTime(_planetary.time);
-            _status = "Time control released";
-        }
-
-        private void RestoreTime()
-        {
-            if (!_timeOverrideOwned || _planetary == null) return;
-            _planetary.time = _previousTime;
-            _planetary.overrideTime = _previousTimeOverride;
-            _timeOverrideOwned = false;
-        }
-
+        public void ReleaseTime() { _debug.ReleaseTime(); _timeText = FormatTime(_debug.CurrentTime); _status = "Time control released"; }
         public void Record()
         {
             if (ActiveCurve != "Custom") { _status = "Switch to Custom before editing samples"; return; }
-            if (!HasReadySun())
-            {
-                _status = "Cannot record: no sun";
-                return;
-            }
-            var y = Mathf.Clamp(-_planetary.SunLight.transform.forward.y, -1f, 1f);
-            GetPreviewBounds(out var minimum, out var maximum);
-            _samples.Add(new Sample
-            {
-                recordedAtUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
-                timeOfDayHours = _planetary.time,
-                solarElevationDegrees = Mathf.Asin(y) * Mathf.Rad2Deg,
-                centerEv100 = (minimum + maximum) * 0.5f,
-                widthEv100 = maximum - minimum
-            });
-            SaveSamples();
-            ExposureCalibrationDebugTab.Rebuild();
+            var s = _runtime.GetSnapshot();
+            if (!s.Ready) { _status = "Cannot record: no sun or active exposure"; return; }
+            _samples.Add(new Sample { recordedAtUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                timeOfDayHours = s.TimeOfDayHours, solarElevationDegrees = s.SolarElevationDegrees,
+                centerEv100 = (s.MinimumEv100 + s.MaximumEv100) / 2, widthEv100 = s.MaximumEv100 - s.MinimumEv100 });
+            SaveSamples(); SamplesChanged?.Invoke();
         }
-
         public void RemoveSample(Sample sample)
         {
             if (ActiveCurve != "Custom") { _status = "Switch to Custom before editing samples"; return; }
             if (!_samples.Remove(sample)) return;
-            if (_samples.Count == 0 && _interpolationEnabled)
-            {
-                _interpolationEnabled = false;
-                _previewEnabled = false;
-            }
-            SaveSamples();
-            ApplyPreview();
-            ExposureCalibrationDebugTab.Rebuild();
+            SaveSamples(); SamplesChanged?.Invoke();
         }
-
         private void LoadSamples()
         {
             try
@@ -501,7 +256,7 @@ namespace SunGlasses.Debugging
             foreach (var sample in records)
             {
                 if (sample == null || !Finite(sample.timeOfDayHours) || sample.timeOfDayHours < 0f || sample.timeOfDayHours >= 24f ||
-                    !Finite(sample.solarElevationDegrees) || !Finite(sample.centerEv100) || !Finite(sample.widthEv100) || sample.widthEv100 < 0f ||
+                    !Finite(sample.solarElevationDegrees) || sample.solarElevationDegrees < -90f || sample.solarElevationDegrees > 90f || !Finite(sample.centerEv100) || !Finite(sample.widthEv100) || sample.widthEv100 < 0f ||
                     sample.centerEv100 - sample.widthEv100 * 0.5f < MinimumEv || sample.centerEv100 + sample.widthEv100 * 0.5f > MaximumEv)
                     throw new InvalidDataException("Sample file contains invalid records");
                 loaded.Add(sample);
@@ -551,14 +306,6 @@ namespace SunGlasses.Debugging
                 _status = "Saved " + _samples.Count + " samples";
             }
             catch (Exception ex) { _status = "Save failed: " + ex.Message; Mod.Log.Error(_status); }
-        }
-
-        private void OnDestroy()
-        {
-            RestoreTime();
-            if (_volume != null) Destroy(_volume);
-            if (_profile != null) Destroy(_profile);
-            if (Instance == this) Instance = null;
         }
 
         private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);

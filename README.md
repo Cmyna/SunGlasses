@@ -38,27 +38,28 @@ independent lightDimmer. A paused frame does not repeatedly multiply the previou
 output. Invalid input keeps the last valid value. This control is session-only;
 unloading restores the unscaled intensity unless another caller changed it.
 
-**SunGlasses Exposure → Active interpolation samples** shows the two sample
-numbers used for the current bounds, their arc angles, whether a mirrored point
-is used, and the interpolation fraction `t` (0 = first sample, 1 = second sample).
+Dynamic exposure runs as a game DOTS managed system in PreCulling after
+RemapLightingSystem, using the bundled realistic curve by default. One global
+HDRP Volume at priority 3000 overrides only automatic exposure bounds. It keeps
+working when the developer menu is closed or the exposure Debug system is disabled.
 
-The realistic curve is selected and enabled by default when the mod loads.
-The same tab provides **Use bright curve** and **Use realistic curve**, bundled
-from `Resources/exposure-curve`. Switching enables interpolated exposure immediately
-and refreshes the sample list. **Active exposure curve** identifies the selected
-curve. **Use custom samples** restores the existing calibration file; bundled
-curves cannot be recorded over or edited with the sample removal controls.
-Curve selection lasts for the session.
+**SunGlasses → Exposure** separates **Calibration sample source** from
+**Runtime exposure curve**. **Use bright curve** and **Use realistic curve**
+switch the runtime curve and load their read-only samples. **Use custom samples**
+loads the editable file while retaining the runtime curve. **Apply custom curve**
+submits a validated copy; recording or deleting samples does not change a
+previously submitted curve.
 
-The same tab shows **Average relative luminance** and **Relative luminance P50**.
-These are approximate SDR scene brightness statistics after post-processing,
-before the game UI: linear RGB uses `Y = 0.2126R + 0.7152G + 0.0722B`, with each
-channel clamped to 0–1. Values are percentages relative to SDR white, not nits.
-A 256×144 image is sampled twice per second using asynchronous GPU readback while
-the rows are visible; sampling stops shortly after the panel closes. P50 is the
-median of the sampled luminances, not the luminance of a median RGB color.
-No exposure or rendered output is changed by this measurement pass. HDR display
-output and physical monitor brightness are outside this metric's scope.
+**Manual calibration preview** applies center ± width/2. Turning it off restores
+the curve if **Enable dynamic exposure** is on; the switches are independent.
+**Applied exposure bounds** reports the last applied frame, and **Preview check**
+verifies the main camera. **Active interpolation samples** reports runtime sample
+numbers, mirrored nodes, arc angles and interpolation fraction.
+Time control and recording belong to Debug. Disabling Debug releases its manual
+preview and time override. Brightness monitoring and average/P50 rows were removed.
+
+See [dynamic exposure and calibration documentation](doc/ai/exposure-calibration-tool.md)
+for interpolation, persistence, lifecycle and verification details.
 
 **SunGlasses Atmosphere** controls a separate global `SunGlasses Atmosphere Volume`
 at priority 3100. The enable checkbox disables the whole Volume, returning to the
