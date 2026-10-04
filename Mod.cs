@@ -54,7 +54,6 @@ namespace SunGlasses
             {
                 _remapLightingSystem.Enabled = false;
                 _remapLightingSystem.ReleaseSunTint();
-                _remapLightingSystem.ReleaseSunIntensity();
                 _remapLightingSystem.ReleaseSunSpecularLight();
             }
             if (m_Setting != null)

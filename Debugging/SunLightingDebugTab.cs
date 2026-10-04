@@ -64,28 +64,6 @@ namespace SunGlasses.Debugging
                         RemapLightingSystem.ActiveSunTint.r, RemapLightingSystem.ActiveSunTint.g,
                         RemapLightingSystem.ActiveSunTint.b)
                 },
-                new DebugUI.TextField
-                {
-                    displayName = "SunLight intensity multiplier (min 0.01)",
-                    getter = () => RemapLightingSystem.SunIntensityMultiplier.ToString("G", CultureInfo.InvariantCulture),
-                    setter = value =>
-                    {
-                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
-                            && !float.IsNaN(parsed) && !float.IsInfinity(parsed) && parsed >= 0.01f)
-                            RemapLightingSystem.SunIntensityMultiplier = parsed;
-                    }
-                },
-                new DebugUI.Value
-                {
-                    displayName = "SunLight intensity before / after multiplier",
-                    getter = () => string.Format(CultureInfo.InvariantCulture, "{0:F2} / {1:F2}",
-                        RemapLightingSystem.SunIntensityBeforeMultiplier, RemapLightingSystem.SunIntensityAfterMultiplier)
-                },
-                new DebugUI.Button
-                {
-                    displayName = "Reset SunLight intensity multiplier to 1",
-                    action = () => RemapLightingSystem.SunIntensityMultiplier = 1f
-                },
                 new DebugUI.FloatField
                 {
                     displayName = "Specular sun lightDimmer",

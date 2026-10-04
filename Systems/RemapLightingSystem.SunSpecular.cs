@@ -55,6 +55,9 @@ namespace SunGlasses.Systems
             CopySunLight(sourceLight, sunSpecularLight);
             // HDRP's own copy includes intensity, disk, cookies, layers and shadow settings.
             sourceData.CopyTo(sunSpecularData);
+            // Ablate the finite angular size on the specular-only sun.
+            // CopyTo restores the source value every frame, so override it here.
+            sunSpecularData.angularDiameter = 0f;
             // HDRP supports only one cascaded directional shadow map. The vanilla
             // sun owns it; the specular-only duplicate must never request another.
             sunSpecularData.EnableShadows(false);
@@ -124,7 +127,6 @@ namespace SunGlasses.Systems
         protected override void OnDestroy()
         {
             ReleaseSunTint();
-            ReleaseSunIntensity();
             ReleaseSunSpecularLight();
             base.OnDestroy();
         }

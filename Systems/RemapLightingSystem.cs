@@ -97,7 +97,6 @@ namespace SunGlasses.Systems
             OverrideSunSize(SunSizeMultiplier);
             OverrideSunBloom(SunBloomMultiplier);
             UpdateSunTint();
-            UpdateSunIntensityMultiplier();
             UpdateSunSpecularLight();
 
         }
