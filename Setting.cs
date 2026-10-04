@@ -49,6 +49,7 @@ namespace SunGlasses
         public Setting(IMod mod, RemapLightingSystem remapLightingSystem) : base(mod)
         {
             _remapLightingSystem = remapLightingSystem;
+            SetDefaults();
         }
 
         
@@ -123,7 +124,7 @@ namespace SunGlasses
             {
                 SetDefaults(); // Apply defaults.
                 EnsureUpdate();
-                base.Apply();
+                Apply();
             }
         }
 
@@ -163,8 +164,6 @@ namespace SunGlasses
 
         public override void Apply()
         {
-            base.Apply();
-
             RemapLightingSystem.AutoHistgramIndex = (int)BrightenLevel;
             RemapLightingSystem.EnableLensFlare = LensFlare;
             RemapLightingSystem.IndirectLightingMultipilier = IndirectDiffuseSunLighting;
@@ -173,8 +172,7 @@ namespace SunGlasses
             RemapLightingSystem.SunBloomMultiplier = SunBloom;
             RemapLightingSystem.SunLightIntensity = SunLightIntensity;
             RemapLightingSystem.SunSizeMultiplier = SunSize;
-
-            _remapLightingSystem.dirty = true;
+            base.Apply();
         }
 
 

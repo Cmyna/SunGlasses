@@ -1,0 +1,116 @@
+using System.Collections.Generic;
+using System.Globalization;
+using Game.Debug;
+using SunGlasses.Systems;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace SunGlasses.Debugging
+{
+    [DebugContainer]
+    internal static class SunLightingDebugTab
+    {
+        [DebugTab("SunGlasses Sun", 101)]
+        private static List<DebugUI.Widget> Build()
+        {
+            var names = new GUIContent[RemapLightingSystem.SunTintNames.Length];
+            var values = new int[names.Length];
+            for (var i = 0; i < names.Length; i++)
+            {
+                names[i] = new GUIContent(RemapLightingSystem.SunTintNames[i]);
+                values[i] = i;
+            }
+            return new List<DebugUI.Widget>
+            {
+                new DebugUI.EnumField
+                {
+                    displayName = "Sun tint preset",
+                    enumNames = names,
+                    enumValues = values,
+                    getter = () => RemapLightingSystem.SunTintPreset,
+                    setter = SetTintPreset,
+                    getIndex = () => RemapLightingSystem.SunTintPreset,
+                    setIndex = SetTintPreset
+                },
+                new DebugUI.Value
+                {
+                    displayName = "Selected sun tint",
+                    getter = () => RemapLightingSystem.SunTintNames[RemapLightingSystem.SunTintPreset]
+                        + " " + RemapLightingSystem.SunTintColors[RemapLightingSystem.SunTintPreset]
+                },
+                new DebugUI.BoolField
+                {
+                    displayName = "Blend sun tint by elevation",
+                    getter = () => RemapLightingSystem.SunTintBlendByElevation,
+                    setter = value => RemapLightingSystem.SunTintBlendByElevation = value
+                },
+                new DebugUI.TextField
+                {
+                    displayName = "White tint threshold (degrees, 0.01-90)",
+                    getter = () => RemapLightingSystem.SunTintWhiteAngle.ToString("G", CultureInfo.InvariantCulture),
+                    setter = value =>
+                    {
+                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
+                            && !float.IsNaN(parsed) && !float.IsInfinity(parsed) && parsed >= 0.01f && parsed <= 90f)
+                            RemapLightingSystem.SunTintWhiteAngle = parsed;
+                    }
+                },
+                new DebugUI.Value
+                {
+                    displayName = "Elevation / white weight / active tint",
+                    getter = () => string.Format(CultureInfo.InvariantCulture,
+                        "{0:F2} deg / {1:P0} white / RGB ({2:F3}, {3:F3}, {4:F3})",
+                        RemapLightingSystem.SunTintElevation, RemapLightingSystem.SunTintWhiteWeight,
+                        RemapLightingSystem.ActiveSunTint.r, RemapLightingSystem.ActiveSunTint.g,
+                        RemapLightingSystem.ActiveSunTint.b)
+                },
+                new DebugUI.TextField
+                {
+                    displayName = "SunLight intensity multiplier (min 0.01)",
+                    getter = () => RemapLightingSystem.SunIntensityMultiplier.ToString("G", CultureInfo.InvariantCulture),
+                    setter = value =>
+                    {
+                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
+                            && !float.IsNaN(parsed) && !float.IsInfinity(parsed) && parsed >= 0.01f)
+                            RemapLightingSystem.SunIntensityMultiplier = parsed;
+                    }
+                },
+                new DebugUI.Value
+                {
+                    displayName = "SunLight intensity before / after multiplier",
+                    getter = () => string.Format(CultureInfo.InvariantCulture, "{0:F2} / {1:F2}",
+                        RemapLightingSystem.SunIntensityBeforeMultiplier, RemapLightingSystem.SunIntensityAfterMultiplier)
+                },
+                new DebugUI.Button
+                {
+                    displayName = "Reset SunLight intensity multiplier to 1",
+                    action = () => RemapLightingSystem.SunIntensityMultiplier = 1f
+                },
+                new DebugUI.FloatField
+                {
+                    displayName = "Specular sun lightDimmer",
+                    getter = () => RemapLightingSystem.SunSpecularLightDimmer,
+                    setter = value =>
+                    {
+                        if (!float.IsNaN(value) && !float.IsInfinity(value))
+                            RemapLightingSystem.SunSpecularLightDimmer = Mathf.Clamp01(value);
+                    },
+                    min = () => 0f,
+                    max = () => 1f,
+                    incStep = 0.01f
+                },
+                new DebugUI.Button
+                {
+                    displayName = "Reset specular sun lightDimmer",
+                    action = () => RemapLightingSystem.SunSpecularLightDimmer = RemapLightingSystem.DefaultSunSpecularLightDimmer
+                }
+            };
+        }
+
+        private static void SetTintPreset(int value)
+        {
+            if (value >= 0 && value < RemapLightingSystem.SunTintColors.Length)
+                RemapLightingSystem.SunTintPreset = value;
+        }
+    }
+}

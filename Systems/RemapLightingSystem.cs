@@ -66,8 +66,6 @@ namespace SunGlasses.Systems
             {0, 20}
         };
 
-        public bool dirty = false;
-
         private Volume remapVolume;
 
         private Bloom globalBloom;
@@ -89,7 +87,6 @@ namespace SunGlasses.Systems
 
         protected override void OnUpdate()
         {
-            if (!dirty) return;
             UpdatePriority();
 
             // override vanilla lighting system
@@ -99,6 +96,9 @@ namespace SunGlasses.Systems
 
             OverrideSunSize(SunSizeMultiplier);
             OverrideSunBloom(SunBloomMultiplier);
+            UpdateSunTint();
+            UpdateSunIntensityMultiplier();
+            UpdateSunSpecularLight();
 
         }
 
@@ -108,7 +108,6 @@ namespace SunGlasses.Systems
             var sunLight = planetarySystem.SunLight;
             if (!sunLight.isValid)
             {
-                dirty = true;
                 return;
             }
             var additionalData = sunLight.additionalData;
@@ -127,7 +126,6 @@ namespace SunGlasses.Systems
         {
             if (lightExposure == null)
             {
-                dirty = true;
                 return;
             }
             if (AutoHistgramIndex > 3 || AutoHistgramIndex < 0) return;
@@ -146,7 +144,6 @@ namespace SunGlasses.Systems
         {
             if (!TryGetVanillaLighting(out var volume, out var sky, out var controller))
             {
-                dirty = true;
                 return;
             }
             sky.exposure.Override(SkyExposure);
@@ -164,7 +161,6 @@ namespace SunGlasses.Systems
         {
             if (!TryGetLensFlareComponent(out var comp))
             {
-                dirty = true;
                 return;
             }
             comp.enabled = EnableLensFlare;
@@ -186,7 +182,8 @@ namespace SunGlasses.Systems
             out IndirectLightingController controller
         ) {
             sky = null; controller = null;
-            volume = GameObject.Find(kLightingPostprocessVolume).GetComponent<Volume>();
+            var lightingObject = GameObject.Find(kLightingPostprocessVolume);
+            volume = lightingObject != null ? lightingObject.GetComponent<Volume>() : null;
             if (volume == null) return false;
             var profile = volume.profile;
             return profile.TryGet(out sky) && profile.TryGet(out controller);

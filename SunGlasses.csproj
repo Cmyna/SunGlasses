@@ -13,7 +13,7 @@
 		<!--The file should contain 2 lines:-->
 		<!--Your.PDX@Account.login-->
 		<!--Your-PDX-Account-Pa$$word-->
-		<PDXAccountDataPath>$(USERPROFILE)\Desktop\pdx_account.txt</PDXAccountDataPath>
+		<PDXAccountDataPath>$(USERPROFILE)\pdx_account.txt</PDXAccountDataPath>
 		
 		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
@@ -22,6 +22,16 @@
 	<!--Imports must be after PropertyGroup block-->
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
+
+	<!-- Build with -p:DeployLocalMod=false while the game is running. -->
+	<Target Name="DeployWIP" AfterTargets="AfterBuild" Condition="'$(NeedBuild)' and '$(DeployLocalMod)' != 'false'">
+		<ItemGroup>
+			<FilesToDeploy Include="$(OutDir)\**\*.*" />
+		</ItemGroup>
+		<Message Text="Copy output to deploy directory $(DeployDir)" Importance="high" />
+		<RemoveDir Directories="$(DeployDir)" />
+		<Copy SourceFiles="@(FilesToDeploy)" DestinationFiles="@(FilesToDeploy->'$(DeployDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
+	</Target>
 
 	<ItemGroup>
 		<Reference Include="Game">
@@ -46,6 +56,12 @@
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
+			<Private>false</Private>
+		</Reference>
+        <Reference Include="UnityEngine.IMGUIModule">
+            <Private>false</Private>
+        </Reference>
+		<Reference Include="UnityEngine.JSONSerializeModule">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Unity.Burst">
@@ -88,6 +104,13 @@
 
 	<ItemGroup>
 	  <Folder Include="OPEN_LISCENES\" />
+    <EmbeddedResource Include="Resources\exposure-curve\*.json">
+      <LogicalName>SunGlasses.ExposureCurves.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <Content Include="Resources\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Include="lang\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
