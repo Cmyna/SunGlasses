@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Game.Debug;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
@@ -111,7 +109,7 @@ namespace SunGlasses.Debugging
             var host = new GameObject(VolumeName);
             DontDestroyOnLoad(host);
             Instance = host.AddComponent<AtmosphereDebugController>();
-            DebugSystem.Rebuild((Func<List<DebugUI.Widget>>)AtmosphereDebugTab.Build);
+            SunGlassesDebugTab.Rebuild();
             return Instance;
         }
         public static void Uninstall()
@@ -165,10 +163,8 @@ namespace SunGlasses.Debugging
         }
     }
 
-    [DebugContainer]
     internal static class AtmosphereDebugTab
     {
-        [DebugTab("SunGlasses Atmosphere", 103)]
         internal static List<DebugUI.Widget> Build()
         {
             var c = AtmosphereDebugController.Instance;

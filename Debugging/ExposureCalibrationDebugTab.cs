@@ -1,16 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Game.Debug;
 using UnityEngine.Rendering;
 
 namespace SunGlasses.Debugging
 {
-    [DebugContainer]
     internal static class ExposureCalibrationDebugTab
     {
-        [DebugTab("SunGlasses Exposure", 100)]
-        private static List<DebugUI.Widget> Build()
+        internal static List<DebugUI.Widget> Build()
         {
             var controller = ExposureCalibrationController.Instance;
             if (controller == null) return null;
@@ -89,8 +85,7 @@ namespace SunGlasses.Debugging
 
         internal static void Rebuild()
         {
-            try { DebugSystem.Rebuild((Func<List<DebugUI.Widget>>)Build); }
-            catch (Exception ex) { Mod.Log.Warn("Could not refresh exposure sample list: " + ex.Message); }
+            SunGlassesDebugTab.Rebuild();
         }
     }
 }

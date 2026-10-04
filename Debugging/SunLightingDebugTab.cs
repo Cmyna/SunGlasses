@@ -1,17 +1,14 @@
 using System.Collections.Generic;
 using System.Globalization;
-using Game.Debug;
 using SunGlasses.Systems;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace SunGlasses.Debugging
 {
-    [DebugContainer]
     internal static class SunLightingDebugTab
     {
-        [DebugTab("SunGlasses Sun", 101)]
-        private static List<DebugUI.Widget> Build()
+        internal static List<DebugUI.Widget> Build()
         {
             var names = new GUIContent[RemapLightingSystem.SunTintNames.Length];
             var values = new int[names.Length];
