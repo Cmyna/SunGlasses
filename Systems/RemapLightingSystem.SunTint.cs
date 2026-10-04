@@ -4,8 +4,10 @@ namespace SunGlasses.Systems
 {
     public partial class RemapLightingSystem
     {
-        // Session-only presets matching the earlier injected preview.
-        internal static int SunTintPreset = 4;
+        internal const int OriginalSunTintPreset = 0;
+        internal const int GentleWarmthSunTintPreset = 4;
+        // Settings select the default; Debug can temporarily choose another preset.
+        internal static int SunTintPreset = GentleWarmthSunTintPreset;
         internal static bool SunTintBlendByElevation = true;
         internal static float SunTintWhiteAngle = 10f;
         internal static float SunTintElevation;
@@ -23,7 +25,7 @@ namespace SunGlasses.Systems
         internal static readonly string[] SunTintNames =
         {
             "Original / no tint", "Mild yellow correction", "Neutral correction",
-            "Cool correction", "Previous gentle warmth", "Golden red"
+            "Cool correction", "Gentle warmth", "Golden red"
         };
 
         private Light tintSunLight;

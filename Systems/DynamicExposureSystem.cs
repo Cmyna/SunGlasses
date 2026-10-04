@@ -16,6 +16,8 @@ namespace SunGlasses.Systems
     }
     public partial class DynamicExposureSystem : GameSystemBase
     {
+        // Vanilla lighting is 1000; Photo Mode's CinematicControlVolume is 2000.
+        public const float VolumePriority = 1500f;
         private PlanetarySystem _planetary;
         private GameObject _host;
         private Volume _volume;
@@ -41,6 +43,19 @@ namespace SunGlasses.Systems
         {
             if (curve == null) throw new ArgumentNullException(nameof(curve));
             _curve = curve; ActiveCurve = name; DynamicEnabled = true;
+        }
+        public void ApplyPreset(Setting.ExposureCurvePreset preset)
+        {
+            if (preset == Setting.ExposureCurvePreset.None)
+            {
+                ClearManualOverride();
+                DynamicEnabled = false;
+                return;
+            }
+            var name = preset == Setting.ExposureCurvePreset.Bright ? "bright" : "realistic";
+            if (_curve == null || ActiveCurve != name) SetCurve(ExposureCurve.LoadBundled(name), name);
+            ClearManualOverride();
+            DynamicEnabled = true;
         }
         public void SetManualOverride(float minimum, float maximum)
         {
@@ -80,7 +95,7 @@ namespace SunGlasses.Systems
                 _exposure = _profile.Add<Exposure>(false);
                 _exposure.limitMin.overrideState = _exposure.limitMax.overrideState = true;
                 _volume = _host.AddComponent<Volume>();
-                _volume.isGlobal = true; _volume.priority = 3000f; _volume.weight = 1f;
+                _volume.isGlobal = true; _volume.priority = VolumePriority; _volume.weight = 1f;
                 _volume.sharedProfile = _profile;
             }
             _host.layer = _originalVolume.layer;

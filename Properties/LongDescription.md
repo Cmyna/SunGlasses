@@ -8,7 +8,8 @@ Options to adjust sun & sky & exposure settings, includes:
 - Enable/Disbale lens flare when facing sun
 - Sky exposure
 - Daytime Ambient lighting control
-- Dark area exposure brighten
+- Exposure curve: None, Realistic or Bright
+- Independent color correction toggle
 
 ### Sun disk size
 
@@ -31,13 +32,13 @@ This option can adjust the sky exposure. Higher value will also brighten everyth
 Behave likes those mods with shadow strength adjustment / ambient lighting in CS1, but only affects daytime lighting. 
 High value will make shadow lookes more blue (Because most of ambient lighting comes from sky)
 
-### Dark Area Exposure
+### Exposure Curve and Color Correction
 
-This options controls the auto exposure behaivour in game. High Level will keeps dark area bright enough, but cause birghter area over-exposed (such as sky or sun)
+Choose None to use the game's exposure bounds, or Realistic (default) / Bright to apply a dynamic exposure curve. Color Correction independently enables atmosphere adjustments and is enabled by default. Both choices are saved in mod settings.
 
 ### NOTES
 
 Sun Bloom Settings in mod will overwrite the effects in PhotoMode, 
-but Sky Exposure & Dark Area Exposure will affect nothings. They work independently
+while exposure curves and atmosphere color correction yield to enabled PhotoMode overrides.
 
 

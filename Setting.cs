@@ -8,7 +8,6 @@ using SunGlasses.Systems;
 using Game.Modding;
 using Game.Settings;
 using Game.UI;
-using Game.UI.Widgets;
 using System.Collections.Generic;
 
 namespace SunGlasses
@@ -44,11 +43,13 @@ namespace SunGlasses
 
         public const float DefaultMultiplier = 1f;
 
-        private RemapLightingSystem _remapLightingSystem;
+        private readonly DynamicExposureSystem _dynamicExposureSystem;
+        private readonly AtmosphereSystem _atmosphereSystem;
 
-        public Setting(IMod mod, RemapLightingSystem remapLightingSystem) : base(mod)
+        public Setting(IMod mod, DynamicExposureSystem dynamicExposureSystem, AtmosphereSystem atmosphereSystem) : base(mod)
         {
-            _remapLightingSystem = remapLightingSystem;
+            _dynamicExposureSystem = dynamicExposureSystem;
+            _atmosphereSystem = atmosphereSystem;
             SetDefaults();
         }
 
@@ -90,28 +91,14 @@ namespace SunGlasses
 
 
         [SettingsUISection(ksMain, kgExposure)]
-        //[SettingsUIHidden]
-        public BrightenDarknessLevel BrightenLevel { get; set; }
+        public ExposureCurvePreset ExposureCurve { get; set; }
 
-        public DropdownItem<int>[] GetIntDropdownItems()
+        [SettingsUISection(ksMain, kgExposure)]
+        public bool ColorCorrection { get; set; }
+
+        public enum ExposureCurvePreset
         {
-            var items = new List<DropdownItem<int>>();
-
-            for (var i = 0; i < 3; i += 1)
-            {
-                items.Add(new DropdownItem<int>()
-                {
-                    value = i,
-                    displayName = i.ToString(),
-                });
-            }
-
-            return items.ToArray();
-        }
-
-        public enum BrightenDarknessLevel
-        {
-            None, Level1, Level2, Level3
+            None, Realistic, Bright
         }
 
 
@@ -156,7 +143,8 @@ namespace SunGlasses
             SkyExposure = RemapLightingSystem.VanillaSkyExposure;
             SunSize = DefaultMultiplier;
             SunBloom = DefaultMultiplier;
-            BrightenLevel = BrightenDarknessLevel.None;
+            ExposureCurve = ExposureCurvePreset.Realistic;
+            ColorCorrection = true;
             IndirectDiffuseSunLighting = RemapLightingSystem.VanillaIndirectDiffuseLighting;
             LensFlare = true;
             RemapLightingSystem.InternalVolumePriority = 2500;
@@ -164,7 +152,11 @@ namespace SunGlasses
 
         public override void Apply()
         {
-            RemapLightingSystem.AutoHistgramIndex = (int)BrightenLevel;
+            _dynamicExposureSystem.ApplyPreset(ExposureCurve);
+            _atmosphereSystem.OverridesEnabled = ColorCorrection;
+            RemapLightingSystem.SunTintPreset = ColorCorrection
+                ? RemapLightingSystem.GentleWarmthSunTintPreset
+                : RemapLightingSystem.OriginalSunTintPreset;
             RemapLightingSystem.EnableLensFlare = LensFlare;
             RemapLightingSystem.IndirectLightingMultipilier = IndirectDiffuseSunLighting;
             RemapLightingSystem.InternalVolumePriority = 2500;
@@ -213,15 +205,17 @@ namespace SunGlasses
                 //{ m_Setting.GetOptionLabelLocaleID(nameof(Setting.GroundDiffuseLight) ), "Ground Diffuse Light Strength" },
                 //{ m_Setting.GetOptionDescLocaleID(nameof(Setting.GroundDiffuseLight) ), "Ground Diffuse Light Strength" },
 
-                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.BrightenLevel) ), "Brighten Dark Area" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ExposureCurve)), "Exposure Curve" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ExposureCurve)), "Select automatic exposure bounds: None, Realistic or Bright." },
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ColorCorrection)), "Sunlight Color Correction" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ColorCorrection)), "Correct the severe yellow color cast in vanilla lighting." },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ResetModSettings)), "Reset To Default" },
                 { m_Setting.GetOptionWarningLocaleID(nameof(Setting.ResetModSettings)), "Are you sure setting everything to default?" },
 
-                { m_Setting.GetEnumValueLocaleID(Setting.BrightenDarknessLevel.None), "None" },
-                { m_Setting.GetEnumValueLocaleID(Setting.BrightenDarknessLevel.Level1), "Weak" },
-                { m_Setting.GetEnumValueLocaleID(Setting.BrightenDarknessLevel.Level2), "Medium" },
-                { m_Setting.GetEnumValueLocaleID(Setting.BrightenDarknessLevel.Level3), "Strong" },
+                { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.None), "None" },
+                { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.Realistic), "Realistic" },
+                { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.Bright), "Bright" },
             };
         }
 

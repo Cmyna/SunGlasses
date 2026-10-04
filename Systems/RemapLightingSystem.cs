@@ -51,26 +51,15 @@ namespace SunGlasses.Systems
 
         internal static float SkyExposure = VanillaSkyExposure;
 
-        internal static int AutoHistgramIndex = 0;
-
         internal static float SunLightIntensity = DefaultPbSunIntensity;
 
         internal static float IndirectLightingMultipilier = VanillaIndirectDiffuseLighting;
 
         internal static bool EnableLensFlare = true;
 
-        internal float[,] AutoHistgramLevels = {
-            {40, 90},
-            {30, 60},
-            {10, 40},
-            {0, 20}
-        };
-
         private Volume remapVolume;
 
         private Bloom globalBloom;
-
-        private Exposure lightExposure;
 
         private PlanetarySystem planetarySystem;
 
@@ -80,8 +69,6 @@ namespace SunGlasses.Systems
             base.OnCreate();
             remapVolume = VolumeHelper.CreateVolume("RemapLightVolume", InternalVolumePriority);
             VolumeHelper.GetOrCreateVolumeComponent(remapVolume, ref globalBloom);
-            VolumeHelper.GetOrCreateVolumeComponent(remapVolume, ref lightExposure);
-            lightExposure.mode.value = ExposureMode.AutomaticHistogram;
             planetarySystem = World.GetOrCreateSystemManaged<PlanetarySystem>();
         }
 
@@ -91,7 +78,6 @@ namespace SunGlasses.Systems
 
             // override vanilla lighting system
             TryUpdateVanillaLighting();
-            UpdateAutoExposure();
             TryUpdateLensFlareComponent();
 
             OverrideSunSize(SunSizeMultiplier);
@@ -120,21 +106,6 @@ namespace SunGlasses.Systems
             // override the global bloom to toggle sun bloom
             globalBloom.intensity.Override(VanillaBloom * weight);
         }
-
-        public void UpdateAutoExposure()
-        {
-            if (lightExposure == null)
-            {
-                return;
-            }
-            if (AutoHistgramIndex > 3 || AutoHistgramIndex < 0) return;
-            lightExposure.mode.overrideState = AutoHistgramIndex != 0;
-            lightExposure.histogramPercentages.overrideState = AutoHistgramIndex != 0;
-            var x = AutoHistgramLevels[AutoHistgramIndex, 0];
-            var y = AutoHistgramLevels[AutoHistgramIndex, 1];
-            lightExposure.histogramPercentages.value = new Vector2 { x = x, y = y };
-        }
-
 
         /// <summary>
         /// try get Physically Base Sky 

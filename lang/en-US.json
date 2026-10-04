@@ -21,16 +21,18 @@
     "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "Daytime Ambient Lighting",
     "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "Control Ambient Lighting Strength During Day",
   
-    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "Brighten Dark Area",
-    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "Increase the Dark Area Exposure(May cause Overexposure of Bright Areas, Such as Sky)",
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "Exposure Curve",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "Select automatic exposure bounds: None, Realistic or Bright.",
 
-    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[None]": "None",
-    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level1]": "Weak",
-    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level2]": "Medium",
-    "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level3]": "Strong",
+    "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[None]": "None",
+    "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Realistic]": "Realistic",
+    "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Bright]": "Bright",
+
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ColorCorrection]": "Sunlight Color Correction",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ColorCorrection]": "Correct the severe yellow color cast in vanilla lighting.",
 
     "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset Default",
-    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset to Default (Vanillia Effect)",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset to defaults (Realistic exposure curve, Color Correction enabled)",
     "Options.WARNING[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Are you sure setting everything to default?"
 
 

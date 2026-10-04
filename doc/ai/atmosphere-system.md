@@ -23,11 +23,13 @@ The defaults now match the values displayed by the old Debug input fields, corre
 
 All components are created with Add(false), enabling overrideState only for these eight parameters. Fog enable, color mode, height, weather, cloud layer types, and other parameters remain under game control. Whether Fog.tint affects the final image therefore also depends on the underlying fog configuration; matching camera-stack parameters does not prove that the effect is visible in the current image.
 
-The global Volume is named SunGlasses Atmosphere Volume, with weight 1 and priority 3100, and uses the layer of LightingPostProcessVolume. The priority preserves the previous behavior and exceeds the corresponding Photo Mode Volume. When overrides are enabled, the mod controls these eight parameters. When disabled, the underlying game or Photo Mode parameters take effect again.
+The global Volume is named SunGlasses Atmosphere Volume, with weight 1 and priority 1500, and uses the layer of LightingPostProcessVolume. It takes precedence over vanilla lighting (1000) and yields to enabled Photo Mode overrides (2000). When overrides are enabled, the mod controls these eight parameters unless a higher-priority Volume overrides them. When disabled, the underlying game or Photo Mode parameters take effect again.
 
 Aerosol density, color saturation, and cloud ambient intensity must be in [0,1], anisotropy in [-1,1], and color channels in [0,1]. All values must be finite. The minimum fog attenuation distance is read directly from HDRP Fog.meanFreePath.min, verified locally as 1 meter. Invalid configurations are rejected as a whole without changing the existing valid configuration.
 
 ## Updates and lifecycle
+
+自定义雾兼容：每帧读取游戏原生 ClimateSystem.fog.overrideState。为 true 时暂停本模组的 Fog.tint 和 Fog.meanFreePath 覆盖，让游戏气候雾接管；恢复为 false 后，下一次渲染更新重新启用这两个覆盖。适用于 Time & Weather Anarchy、自带开发者菜单 Override Fog，以及使用同一接口的其他模组，不依赖其程序集。太阳色调、天空与云层校正继续生效，因此仍可能改变雾的最终视觉观感。参数值在暂停期间保留，配置更新及资源重建后也遵循相同规则。
 
 The system is explicitly registered through UpdateSystem in PreCulling after DynamicExposureSystem. The current order is LightingSystem → RemapLightingSystem → DynamicExposureSystem → AtmosphereSystem.
 
@@ -35,15 +37,19 @@ Each frame checks scene state, the sun Transform, and the original lighting Volu
 
 City preload suspends overrides and releases resources; loading completion permits recreation. System stop, mod disposal, and system destruction also release the Volume, Profile, and Profile components. If the scene destroys the host object itself, the system cleans up the old Profile before recreating resources. The game World can survive across cities, so resource cleanup does not depend on World destruction.
 
-OverridesEnabled controls atmosphere overrides themselves; the system's Enabled property controls updates and resource lifecycle. Disabling atmosphere overrides does not affect dynamic exposure or sun lighting. Re-enabling the system recreates resources using the retained configuration; restarting the process restores defaults.
+OverridesEnabled controls atmosphere overrides themselves; the system's Enabled property controls updates and resource lifecycle. 设置中的独立“颜色校正”勾选项默认开启，保存到模组设置，并在加载及应用设置时恢复。开启时启用大气覆盖，同时选择 Gentle warmth 太阳色调预设（RGB 0.76、0.85、1）；关闭时禁用大气覆盖，同时选择 Original / no tint 预设（白色）。原 Previous gentle warmth 预设更名为 Gentle warmth。现有按太阳高度向白色渐变的规则保持有效。选择曝光曲线“无”不会关闭颜色校正。Debug 对开关或色调的临时修改不写入保存设置，应用设置会恢复对应的预设。Disabling atmosphere overrides directly in Debug does not affect dynamic exposure or sun lighting. Re-enabling the system recreates resources using the retained configuration; restarting restores atmosphere parameters to defaults and loads the saved Color Correction switch.
 
 ## Debug diagnostics
 
 SunGlasses → Atmosphere provides the Enable atmosphere overrides checkbox and displays system status, whether the Volume is active, configured sky and fog/cloud parameters, effective main-camera parameters, and a camera match check. Unchecking disables the override Volume on the next PreCulling update; checking reapplies the current configuration.
 
-Atmosphere camera check compares the eight parameters in the main camera's HDRP stack against the configuration. It displays Applied to main camera when all match, Off when the system or overrides are disabled, Waiting when resources are not ready, and Mismatch for competing Volumes or camera-layer mismatches. Color checks compare RGB, and scalar checks use small absolute/relative error tolerances.
+Atmosphere camera check compares the actively controlled parameters in the main camera's HDRP stack against the configuration. 自定义雾接管时跳过两项雾参数比较，显示 Applied to main camera; fog delegated to custom fog，同时提供 Fog overrides suspended for custom fog 状态。It displays Applied to main camera when all controlled parameters match, Off when the system or overrides are disabled, Waiting when resources are not ready, and Mismatch for competing Volumes or camera-layer mismatches. Color checks compare RGB, and scalar checks use small absolute/relative error tolerances.
 
 ## Implementation alignment and verification
+
+2026-10-05 自定义雾兼容：官方编译、后处理与本机部署通过，0 警告、0 错误。基于本机游戏及 Time & Weather Anarchy v3.2 程序集确认原生雾覆盖接口和衰减距离冲突。本次尚未验证城市中自定义雾切换与最终画面。
+
+2026-10-04 设置与优先级调整：官方编译与后处理通过，0 警告、0 错误。游戏程序集确认常规照明 1000、Photo Mode 2000；大气覆盖改为 1500。本次未部署，游戏未运行，设置切换及 Photo Mode 覆盖的视觉效果尚未在游戏内验证。以下为此前实现的验证记录。
 
 2026-10-04: official C# compilation, mod post-processing, and local deployment passed with 0 warnings and 0 errors. The deployed and built DLLs had matching SHA256 hashes.
 

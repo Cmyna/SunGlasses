@@ -26,6 +26,7 @@ namespace SunGlasses.Debugging
                 },
                 new DebugUI.Value { displayName = "Atmosphere status", getter = () => system.Status },
                 new DebugUI.Value { displayName = "Atmosphere Volume active", getter = () => system.VolumeActive },
+                new DebugUI.Value { displayName = "Fog overrides suspended for custom fog", getter = () => system.FogOverridesSuspended },
                 new DebugUI.Value { displayName = "Configured sky", getter = () => SkyText(system.Parameters) },
                 new DebugUI.Value { displayName = "Configured fog / clouds", getter = () => FogText(system.Parameters) },
                 new DebugUI.Value { displayName = "Effective camera sky", getter = CameraSkyText },
@@ -89,9 +90,13 @@ namespace SunGlasses.Debugging
             var p = system.Parameters;
             bool matches = Close(sky.aerosolDensity.value, p.AerosolDensity) && Close(sky.aerosolAnisotropy.value, p.AerosolAnisotropy)
                 && Close(sky.colorSaturation.value, p.ColorSaturation) && Close(sky.aerosolTint.value, p.AerosolTint)
-                && Close(sky.horizonTint.value, p.HorizonTint) && Close(fog.tint.value, p.FogTint)
-                && Close(fog.meanFreePath.value, p.FogAttenuationDistance) && Close(clouds.layerA.ambientProbeDimmer.value, p.CloudAmbientDimmer);
-            return matches ? "Applied to main camera" : "Mismatch: check camera mask or competing Volume";
+                && Close(sky.horizonTint.value, p.HorizonTint)
+                && (system.FogOverridesSuspended || (Close(fog.tint.value, p.FogTint)
+                    && Close(fog.meanFreePath.value, p.FogAttenuationDistance)))
+                && Close(clouds.layerA.ambientProbeDimmer.value, p.CloudAmbientDimmer);
+            return matches ? (system.FogOverridesSuspended
+                ? "Applied to main camera; fog delegated to custom fog" : "Applied to main camera")
+                : "Mismatch: check camera mask or competing Volume";
         }
 
         private static bool Close(float actual, float expected) => Mathf.Abs(actual - expected) <= Mathf.Max(0.00001f, Mathf.Abs(expected) * 0.00001f);

@@ -36,11 +36,11 @@ namespace SunGlasses
             _exposureDebugSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<ExposureDebugSystem>();
             _atmosphereSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<AtmosphereSystem>();
 
-            m_Setting = new Setting(this, _remapLightingSystem);
+            m_Setting = new Setting(this, _dynamicExposureSystem, _atmosphereSystem);
             m_Setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new SimpleLocale(m_Setting));
 
-            AssetDatabase.global.LoadSettings(nameof(SunGlasses), m_Setting, new Setting(this, _remapLightingSystem));
+            AssetDatabase.global.LoadSettings(nameof(SunGlasses), m_Setting, new Setting(this, _dynamicExposureSystem, _atmosphereSystem));
             // Loading persisted values does not push them into the rendering system.
             m_Setting.Apply();
 

@@ -4,6 +4,8 @@
 
 Dynamic exposure uses the built-in `realistic` curve by default. Each rendered frame calculates automatic exposure bounds from the sun angle, independently of whether the developer menu is open or the Debug system is enabled.
 
+设置中的“曝光曲线”下拉框提供“无、真实、明亮”，默认“真实”。“无”关闭动态曝光覆盖；其余选项应用对应的内置曲线。应用设置会清除手动曝光预览。独立的“颜色校正”勾选项默认开启，不受曝光曲线选择影响：开启时启用大气覆盖并选择 Gentle warmth 太阳色调；关闭时禁用大气覆盖并选择 Original / no tint。两个选项保存到模组设置并在加载时应用。旧的暗部增亮设置及其曝光模式、直方图百分位修改已移除。
+
 | Module | Responsibility |
 | --- | --- |
 | `DynamicExposureSystem` | DOTS managed system: reads sun state, evaluates and applies exposure, manages Volume and scene resources |
@@ -16,7 +18,7 @@ The dynamic system is explicitly registered through UpdateSystem in PreCulling a
 
 ## Exposure application rules
 
-The system owns a global HDRP Volume with priority 3000 and weight 1, using the layer of LightingPostProcessVolume. It overrides only Exposure.limitMin and limitMax, preserving the exposure mode and other parameters from underlying Volumes. The component is created with VolumeProfile.Add<Exposure>(false); true would enable other overrides, including Fixed mode, potentially overexposing the image.
+The system owns a global HDRP Volume with priority 1500 and weight 1, using the layer of LightingPostProcessVolume. Vanilla lighting has priority 1000 and Photo Mode's CinematicControlVolume has priority 2000, so enabled Photo Mode overrides take precedence. It overrides only Exposure.limitMin and limitMax, preserving the exposure mode and other parameters from underlying Volumes. The component is created with VolumeProfile.Add<Exposure>(false); true would enable other overrides, including Fixed mode, potentially overexposing the image.
 
 1. When manual calibration preview is enabled, use center ± width/2.
 2. Otherwise, when dynamic exposure is enabled, use the runtime curve's interpolated result.
@@ -62,7 +64,7 @@ Time accepts decimal hours in [0,24), for example 5.85 means 05:51. The first ta
 
 Closing the menu does not release preview or time control. City preload, Debug stop, mod disposal, and system destruction release temporary time and manual preview. The dynamic system releases its Volume/Profile on city preload, stop, disposal, and destruction, then recreates them according to scene resource availability. The World can survive across cities, so system destruction cannot replace city-loading notifications.
 
-Curve selection, the dynamic switch, and calibration parameters are session state and are not written to city saves. Custom samples use a separate file. Disabling Debug does not discard curves or samples and does not stop dynamic exposure.
+The options-page curve selection is persisted in mod settings, independently of city saves. Debug changes to the runtime curve, dynamic switch, and calibration parameters are temporary; applying the mod settings restores the saved preset. Custom samples use a separate file. Disabling Debug does not discard curves or samples and does not stop dynamic exposure.
 
 ## Sample file
 
@@ -84,6 +86,8 @@ The Custom file is SunGlasses/exposure-calibration.json under Unity Application.
 Serialization uses DataContractJsonSerializer. Loading validates the entire file first; failure preserves the previous list and file. After a read failure, saving is blocked until Custom is successfully selected again. Older files containing only version are treated as empty lists. Recording or deletion triggers saving: all records are serialized and read back for validation before replacement through a temporary file. Errors appear in Status and logs.
 
 ## Implementation alignment and verification
+
+2026-10-04 设置接入：官方编译与后处理通过，0 警告、0 错误。本机游戏程序集确认常规照明优先级 1000、Photo Mode 优先级 2000；两个新覆盖 Volume 均为 1500。本次未部署，游戏未运行，新的设置操作及 Photo Mode 视觉效果尚未进行游戏内验证。以下为此前实现的验证记录。
 
 The separation was completed on 2026-10-04. Official C# compilation, mod post-processing, and local deployment passed with 0 warnings and 0 errors. Built and deployed DLLs had matching SHA256 hashes. The following were verified in a loaded city through the Unity debugging connection and game UI:
 

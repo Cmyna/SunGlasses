@@ -16,8 +16,8 @@ and is not saved to the mod settings.
 
 **SunGlasses Sun → Sun tint preset** cycles through six
 presets: original white (1, 1, 1), mild correction (0.78, 0.88, 1), neutral
-correction (0.70, 0.83, 1), cool correction (0.65, 0.80, 1), previous gentle
-warmth (0.76, 0.85, 1; default), and golden red (1, 0.86, 0.72).
+correction (0.70, 0.83, 1), cool correction (0.65, 0.80, 1), Gentle warmth
+(0.76, 0.85, 1; default), and golden red (1, 0.86, 0.72).
 **Selected sun tint** identifies the selected preset.
 **Blend sun tint by elevation** is enabled by default. It uses the actual sun
 direction to blend from the selected preset at 0 degrees to white at
@@ -27,7 +27,9 @@ Disabling the blend applies the fixed preset at every angle. The elevation,
 white weight and resulting RGB are displayed in the same debug tab.
 The resulting tint is applied after vanilla lighting and before copying the specular
 sun, without changing intensity or color-temperature settings. Closing the developer
-menu retains the selection; it is session-only. Unloading restores the captured tint
+menu retains the Debug selection; it is session-only. Applying the saved Color
+Correction option selects Gentle warmth when enabled, or Original / no tint when
+disabled, retaining the elevation blend settings. Unloading restores the captured tint
 unless another caller has since changed it.
 
 **SunLight intensity multiplier (min 0.01)** accepts a finite number of at least
@@ -40,8 +42,16 @@ unloading restores the unscaled intensity unless another caller changed it.
 
 Dynamic exposure runs as a game DOTS managed system in PreCulling after
 RemapLightingSystem, using the bundled realistic curve by default. One global
-HDRP Volume at priority 3000 overrides only automatic exposure bounds. It keeps
+HDRP Volume at priority 1500 overrides only automatic exposure bounds, above
+vanilla lighting (1000) and below Photo Mode (2000). It keeps
 working when the developer menu is closed or the exposure Debug system is disabled.
+
+The mod options provide an **Exposure Curve** dropdown: **None**, **Realistic**
+(default), or **Bright**. **None** disables the exposure override. The independent
+**Color Correction** checkbox (enabled by default) controls atmosphere overrides.
+Both options are saved and applied at mod load and when changed. Applying options
+clears manual exposure preview and restores the selected preset; Debug curve
+changes remain temporary. The old dark-area histogram adjustment has been removed.
 
 **SunGlasses → Exposure** separates **Calibration sample source** from
 **Runtime exposure curve**. **Use bright curve** and **Use realistic curve**
@@ -63,17 +73,24 @@ for interpolation, persistence, lifecycle and verification details.
 
 Atmosphere overrides now run as a game DOTS managed system in PreCulling after
 dynamic exposure, independent of Debug. A global `SunGlasses Atmosphere Volume`
-at priority 3100 overrides only eight selected sky, fog and cloud parameters.
+at priority 1500 overrides only eight selected sky, fog and cloud parameters,
+above vanilla lighting (1000) and below Photo Mode (2000).
 Defaults are aerosol density 0.024, anisotropy 0.8, white aerosol tint,
 saturation 0.7, horizon RGB (0.5, 0.65, 1), fog RGB (0.8, 0.8, 1), fog attenuation
 distance 20000 meters and cloud layer A ambientProbeDimmer 1. Fog enable, color
 mode, height, weather and other cloud parameters remain controlled by the game.
 
+When the native `ClimateSystem.fog.overrideState` is enabled (for example by
+Time & Weather Anarchy custom fog or the game's Debug Override Fog control),
+SunGlasses suspends both fog tint and attenuation-distance overrides. Turning
+custom fog off restores them on the next rendering update. Sky, clouds and sun
+color correction remain active. This requires no dependency on another mod.
+
 **SunGlasses → Atmosphere** provides an **Enable atmosphere overrides** checkbox
 and read-only diagnostics: configured and effective camera values, Volume status
 and a camera match check. Unchecking restores the underlying game / Photo Mode
-values; checking reapplies the current atmosphere configuration. This stage adds
-no options to Setting or persistence; the defaults are enabled at startup.
+values; checking reapplies the current atmosphere configuration. The saved
+**Color Correction** option controls the same switch; Debug edits are temporary.
 See [atmosphere system documentation](doc/ai/atmosphere-system.md) for lifecycle,
 configuration boundaries and verification details.
 

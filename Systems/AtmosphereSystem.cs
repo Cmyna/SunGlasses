@@ -11,9 +11,10 @@ namespace SunGlasses.Systems
     public partial class AtmosphereSystem : GameSystemBase
     {
         public const string VolumeName = "SunGlasses Atmosphere Volume";
-        public const float VolumePriority = 3100f;
+        public const float VolumePriority = DynamicExposureSystem.VolumePriority;
 
         private PlanetarySystem _planetary;
+        private ClimateSystem _climate;
         private GameObject _host;
         private GameObject _lighting;
         private Volume _volume;
@@ -28,12 +29,14 @@ namespace SunGlasses.Systems
         public AtmosphereParameters Parameters { get; private set; } = AtmosphereParameters.Defaults;
         public bool OverridesEnabled { get; set; } = true;
         public bool VolumeActive => _volume != null && _volume.enabled;
+        public bool FogOverridesSuspended { get; private set; }
         public string Status { get; private set; } = "Waiting for lighting scene";
 
         protected override void OnCreate()
         {
             base.OnCreate();
             _planetary = World.GetOrCreateSystemManaged<PlanetarySystem>();
+            _climate = World.GetOrCreateSystemManaged<ClimateSystem>();
             // Read HDRP's actual constraint, including before any scene Volume exists.
             var fog = ScriptableObject.CreateInstance<Fog>();
             _minimumFogDistance = fog.meanFreePath.min;
@@ -64,8 +67,15 @@ namespace SunGlasses.Systems
             if (_host == null) CreateVolume();
             _host.layer = _lighting.layer;
             if (_dirty) ApplyParameters();
+            // Respect custom fog from the game Debug menu or mods using its native API.
+            // Disable our flags instead of writing into the game's climate Volume.
+            FogOverridesSuspended = _climate.fog.overrideState;
+            _fog.tint.overrideState = !FogOverridesSuspended;
+            _fog.meanFreePath.overrideState = !FogOverridesSuspended;
             _volume.enabled = OverridesEnabled;
-            Status = OverridesEnabled ? "Atmosphere overrides active" : "Off: game / Photo Mode controls atmosphere";
+            Status = !OverridesEnabled ? "Off: game / Photo Mode controls atmosphere"
+                : FogOverridesSuspended ? "Atmosphere overrides active; custom fog controls fog"
+                : "Atmosphere overrides active";
         }
 
         private void CreateVolume()
@@ -107,6 +117,7 @@ namespace SunGlasses.Systems
         private void SetDormant(string status)
         {
             if (_volume != null) _volume.enabled = false;
+            FogOverridesSuspended = false;
             Status = status;
         }
 
@@ -138,6 +149,7 @@ namespace SunGlasses.Systems
             _fog = null;
             _clouds = null;
             _dirty = true;
+            FogOverridesSuspended = false;
             Status = "Waiting for lighting scene";
         }
 

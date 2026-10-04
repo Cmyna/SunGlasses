@@ -22,16 +22,18 @@
   "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "白天环境光亮度",
   "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "控制白天环境光强度",
 
-  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "暗部增亮",
-  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.BrightenLevel]": "暗部曝光增亮（可能会使亮处产生过曝，例如天空）",
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "曝光曲线",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "选择动态曝光曲线：无、真实或明亮。",
 
-  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[None]": "无",
-  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level1]": "弱",
-  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level2]": "中",
-  "Options.SunGlasses.SunGlasses.Mod.BRIGHTENDARKNESSLEVEL[Level3]": "强",
+  "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[None]": "无",
+  "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Realistic]": "真实",
+  "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Bright]": "明亮",
+
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ColorCorrection]": "太阳光照颜色校正",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ColorCorrection]": "校正原版的严重黄色色偏光照",
 
   
   "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认",
-  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认 (原版效果)",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认（真实曝光曲线、启用颜色校正）",
   "Options.WARNING[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "所有设置将重置为默认?"
 }
