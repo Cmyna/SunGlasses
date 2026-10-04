@@ -61,20 +61,21 @@ preview and time override. Brightness monitoring and average/P50 rows were remov
 See [dynamic exposure and calibration documentation](doc/ai/exposure-calibration-tool.md)
 for interpolation, persistence, lifecycle and verification details.
 
-**SunGlasses Atmosphere** controls a separate global `SunGlasses Atmosphere Volume`
-at priority 3100. The enable checkbox disables the whole Volume, returning to the
-underlying game/Photo Mode settings. Aerosol density, anisotropy, aerosol tint,
-atmosphere color saturation, horizon tint, fog tint and fog attenuation distance are overridden.
-Defaults are 0.012, 0.8, white RGB (1, 1, 1), 0.7, RGB (0.55, 0.59499943, 1)
-and fog RGB (0.7, 0.795, 1).
-**Fog attenuation distance (meters)** overrides HDRP's `meanFreePath`, default
-20000 meters; greater distances make the fog thinner. It accepts finite values at
-or above HDRP's minimum and shares the atmosphere enable checkbox.
-**Cloud layer A ambientProbeDimmer** controls ambient lighting of distant clouds
-from 0 (suppressed) to 1 (full influence, default). It shares the atmosphere
-enable checkbox and only overrides this CloudLayer parameter.
-Text inputs accept density and saturation 0–1, anisotropy −1–1 and tint channels 0–1; invalid input
-retains the previous valid value. These debug controls reset when the game restarts.
+Atmosphere overrides now run as a game DOTS managed system in PreCulling after
+dynamic exposure, independent of Debug. A global `SunGlasses Atmosphere Volume`
+at priority 3100 overrides only eight selected sky, fog and cloud parameters.
+Defaults are aerosol density 0.024, anisotropy 0.8, white aerosol tint,
+saturation 0.7, horizon RGB (0.5, 0.65, 1), fog RGB (0.8, 0.8, 1), fog attenuation
+distance 20000 meters and cloud layer A ambientProbeDimmer 1. Fog enable, color
+mode, height, weather and other cloud parameters remain controlled by the game.
+
+**SunGlasses → Atmosphere** provides an **Enable atmosphere overrides** checkbox
+and read-only diagnostics: configured and effective camera values, Volume status
+and a camera match check. Unchecking restores the underlying game / Photo Mode
+values; checking reapplies the current atmosphere configuration. This stage adds
+no options to Setting or persistence; the defaults are enabled at startup.
+See [atmosphere system documentation](doc/ai/atmosphere-system.md) for lifecycle,
+configuration boundaries and verification details.
 
 To build and run the official post-processing without deploying to local Mods:
 

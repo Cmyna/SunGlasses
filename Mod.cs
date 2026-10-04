@@ -22,6 +22,7 @@ namespace SunGlasses
         private RemapLightingSystem _remapLightingSystem;
         private DynamicExposureSystem _dynamicExposureSystem;
         private ExposureDebugSystem _exposureDebugSystem;
+        private AtmosphereSystem _atmosphereSystem;
 
         public void OnLoad(UpdateSystem updateSystem)
         {
@@ -33,7 +34,7 @@ namespace SunGlasses
             _remapLightingSystem.Enabled = true;
             _dynamicExposureSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<DynamicExposureSystem>();
             _exposureDebugSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<ExposureDebugSystem>();
-            AtmosphereDebugController.Install();
+            _atmosphereSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<AtmosphereSystem>();
 
             m_Setting = new Setting(this, _remapLightingSystem);
             m_Setting.RegisterInOptionsUI();
@@ -47,6 +48,7 @@ namespace SunGlasses
             // Copy this frame's sun after vanilla updates its intensity and color.
             updateSystem.UpdateAfter<RemapLightingSystem, LightingSystem>(SystemUpdatePhase.PreCulling);
             updateSystem.UpdateAfter<DynamicExposureSystem, RemapLightingSystem>(SystemUpdatePhase.PreCulling);
+            updateSystem.UpdateAfter<AtmosphereSystem, DynamicExposureSystem>(SystemUpdatePhase.PreCulling);
             updateSystem.UpdateAt<ExposureDebugSystem>(SystemUpdatePhase.MainLoop);
         }
 
@@ -55,7 +57,7 @@ namespace SunGlasses
             Log.Info(nameof(OnDispose));
             if (_exposureDebugSystem != null) { _exposureDebugSystem.Enabled = false; _exposureDebugSystem.Shutdown(); }
             if (_dynamicExposureSystem != null) { _dynamicExposureSystem.Enabled = false; _dynamicExposureSystem.Shutdown(); }
-            AtmosphereDebugController.Uninstall();
+            if (_atmosphereSystem != null) { _atmosphereSystem.Enabled = false; _atmosphereSystem.Shutdown(); }
             if (_remapLightingSystem != null)
             {
                 _remapLightingSystem.Enabled = false;
