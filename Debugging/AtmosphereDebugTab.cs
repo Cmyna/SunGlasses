@@ -27,6 +27,38 @@ namespace SunGlasses.Debugging
                 new DebugUI.Value { displayName = "Atmosphere status", getter = () => system.Status },
                 new DebugUI.Value { displayName = "Atmosphere Volume active", getter = () => system.VolumeActive },
                 new DebugUI.Value { displayName = "Fog overrides suspended for custom fog", getter = () => system.FogOverridesSuspended },
+                new DebugUI.BoolField
+                {
+                    displayName = "Blend horizon tint by elevation",
+                    getter = () => system.Parameters.HorizonTintBlendByElevation,
+                    setter = value =>
+                    {
+                        var p = system.Parameters;
+                        p.HorizonTintBlendByElevation = value;
+                        system.TrySetParameters(p);
+                    }
+                },
+                new DebugUI.TextField
+                {
+                    displayName = "Horizon white tint threshold (degrees, 0.01-90)",
+                    getter = () => system.Parameters.HorizonTintWhiteAngle.ToString("G", CultureInfo.InvariantCulture),
+                    setter = value =>
+                    {
+                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+                        {
+                            var p = system.Parameters;
+                            p.HorizonTintWhiteAngle = parsed;
+                            system.TrySetParameters(p);
+                        }
+                    }
+                },
+                new DebugUI.Value
+                {
+                    displayName = "Horizon elevation / white weight / active tint",
+                    getter = () => string.Format(CultureInfo.InvariantCulture,
+                        "{0:F2} deg / {1:P0} white / RGB {2}",
+                        system.HorizonTintElevation, system.HorizonTintWhiteWeight, Rgb(system.ActiveHorizonTint))
+                },
                 new DebugUI.Value { displayName = "Configured sky", getter = () => SkyText(system.Parameters) },
                 new DebugUI.Value { displayName = "Configured fog / clouds", getter = () => FogText(system.Parameters) },
                 new DebugUI.Value { displayName = "Effective camera sky", getter = CameraSkyText },
@@ -90,7 +122,7 @@ namespace SunGlasses.Debugging
             var p = system.Parameters;
             bool matches = Close(sky.aerosolDensity.value, p.AerosolDensity) && Close(sky.aerosolAnisotropy.value, p.AerosolAnisotropy)
                 && Close(sky.colorSaturation.value, p.ColorSaturation) && Close(sky.aerosolTint.value, p.AerosolTint)
-                && Close(sky.horizonTint.value, p.HorizonTint)
+                && Close(sky.horizonTint.value, system.ActiveHorizonTint)
                 && (system.FogOverridesSuspended || (Close(fog.tint.value, p.FogTint)
                     && Close(fog.meanFreePath.value, p.FogAttenuationDistance)))
                 && Close(clouds.layerA.ambientProbeDimmer.value, p.CloudAmbientDimmer);

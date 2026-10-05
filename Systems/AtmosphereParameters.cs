@@ -10,6 +10,8 @@ namespace SunGlasses.Systems
         public Color AerosolTint;
         public float ColorSaturation;
         public Color HorizonTint;
+        public bool HorizonTintBlendByElevation;
+        public float HorizonTintWhiteAngle;
         public Color FogTint;
         public float FogAttenuationDistance;
         public float CloudAmbientDimmer;
@@ -21,6 +23,8 @@ namespace SunGlasses.Systems
             AerosolTint = Color.white,
             ColorSaturation = 0.7f,
             HorizonTint = new Color(0.5f, 0.65f, 1f, 1f),
+            HorizonTintBlendByElevation = true,
+            HorizonTintWhiteAngle = 90f,
             FogTint = new Color(0.8f, 0.8f, 1f, 1f),
             FogAttenuationDistance = 20000f,
             CloudAmbientDimmer = 1f
@@ -31,6 +35,7 @@ namespace SunGlasses.Systems
             return InRange(AerosolDensity, 0f, 1f) && InRange(AerosolAnisotropy, -1f, 1f)
                 && InRange(ColorSaturation, 0f, 1f) && InRange(CloudAmbientDimmer, 0f, 1f)
                 && ValidColor(AerosolTint) && ValidColor(HorizonTint) && ValidColor(FogTint)
+                && InRange(HorizonTintWhiteAngle, 0.01f, 90f)
                 && InRange(FogAttenuationDistance, minimumFogDistance, float.MaxValue);
         }
 

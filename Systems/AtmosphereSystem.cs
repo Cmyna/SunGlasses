@@ -30,6 +30,9 @@ namespace SunGlasses.Systems
         public bool OverridesEnabled { get; set; } = true;
         public bool VolumeActive => _volume != null && _volume.enabled;
         public bool FogOverridesSuspended { get; private set; }
+        public float HorizonTintElevation { get; private set; }
+        public float HorizonTintWhiteWeight { get; private set; }
+        public Color ActiveHorizonTint { get; private set; } = AtmosphereParameters.Defaults.HorizonTint;
         public string Status { get; private set; } = "Waiting for lighting scene";
 
         protected override void OnCreate()
@@ -67,6 +70,7 @@ namespace SunGlasses.Systems
             if (_host == null) CreateVolume();
             _host.layer = _lighting.layer;
             if (_dirty) ApplyParameters();
+            UpdateHorizonTint();
             // Respect custom fog from the game Debug menu or mods using its native API.
             // Disable our flags instead of writing into the game's climate Volume.
             FogOverridesSuspended = _climate.fog.overrideState;
@@ -106,12 +110,22 @@ namespace SunGlasses.Systems
             _sky.aerosolAnisotropy.Override(p.AerosolAnisotropy);
             _sky.aerosolTint.Override(p.AerosolTint);
             _sky.colorSaturation.Override(p.ColorSaturation);
-            _sky.horizonTint.Override(p.HorizonTint);
             // Fog enable, color mode, height and all other cloud controls stay with the game.
             _fog.tint.Override(p.FogTint);
             _fog.meanFreePath.Override(p.FogAttenuationDistance);
             _clouds.layerA.ambientProbeDimmer.Override(p.CloudAmbientDimmer);
             _dirty = false;
+        }
+
+        private void UpdateHorizonTint()
+        {
+            var p = Parameters;
+            // Match sun tint's elevation convention, using this frame's actual sun direction.
+            HorizonTintElevation = Mathf.Asin(Mathf.Clamp(-_planetary.SunLight.transform.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+            HorizonTintWhiteWeight = p.HorizonTintBlendByElevation
+                ? Mathf.Clamp01(HorizonTintElevation / p.HorizonTintWhiteAngle) : 0f;
+            ActiveHorizonTint = Color.Lerp(p.HorizonTint, Color.white, HorizonTintWhiteWeight);
+            _sky.horizonTint.Override(ActiveHorizonTint);
         }
 
         private void SetDormant(string status)

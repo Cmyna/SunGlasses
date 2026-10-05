@@ -87,7 +87,14 @@ custom fog off restores them on the next rendering update. Sky, clouds and sun
 color correction remain active. This requires no dependency on another mod.
 
 **SunGlasses → Atmosphere** provides an **Enable atmosphere overrides** checkbox
-and read-only diagnostics: configured and effective camera values, Volume status
+plus **Blend horizon tint by elevation** (enabled by default) and
+**Horizon white tint threshold (degrees, 0.01-90)** (default 90 degrees).
+The horizon blends from its configured RGB at 0 degrees to white at the threshold,
+staying white above it and at the configured tint below the horizon. Disabling
+the blend keeps the fixed configured tint. These controls are independent of
+the sun tint threshold, last for the session, and work with the menu closed.
+Diagnostics display elevation, white weight, active horizon RGB,
+configured and effective camera values, Volume status
 and a camera match check. Unchecking restores the underlying game / Photo Mode
 values; checking reapplies the current atmosphere configuration. The saved
 **Color Correction** option controls the same switch; Debug edits are temporary.
