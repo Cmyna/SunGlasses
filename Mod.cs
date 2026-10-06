@@ -31,6 +31,7 @@ namespace SunGlasses
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset)) Log.Info($"Current mod asset at {asset.path}");
 
             _remapLightingSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<RemapLightingSystem>();
+            RemapLightingSystem.GroundTintWeight = 0f;
             _remapLightingSystem.Enabled = true;
             _dynamicExposureSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<DynamicExposureSystem>();
             _exposureDebugSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<ExposureDebugSystem>();
@@ -61,6 +62,7 @@ namespace SunGlasses
             if (_remapLightingSystem != null)
             {
                 _remapLightingSystem.Enabled = false;
+                _remapLightingSystem.ReleaseGroundTint();
                 _remapLightingSystem.ReleaseSunTint();
                 _remapLightingSystem.ReleaseSunSpecularLight();
             }

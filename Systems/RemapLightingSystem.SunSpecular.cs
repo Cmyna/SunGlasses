@@ -126,6 +126,7 @@ namespace SunGlasses.Systems
 
         protected override void OnDestroy()
         {
+            ReleaseGroundTint();
             ReleaseSunTint();
             ReleaseSunSpecularLight();
             base.OnDestroy();

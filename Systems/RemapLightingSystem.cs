@@ -78,6 +78,7 @@ namespace SunGlasses.Systems
 
             // override vanilla lighting system
             TryUpdateVanillaLighting();
+            UpdateGroundTint();
             TryUpdateLensFlareComponent();
 
             OverrideSunSize(SunSizeMultiplier);

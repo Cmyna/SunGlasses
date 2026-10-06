@@ -24,7 +24,7 @@ namespace SunGlasses.Systems
             ColorSaturation = 0.7f,
             HorizonTint = new Color(0.5f, 0.65f, 1f, 1f),
             HorizonTintBlendByElevation = true,
-            HorizonTintWhiteAngle = 90f,
+            HorizonTintWhiteAngle = 20f,
             FogTint = new Color(0.8f, 0.8f, 1f, 1f),
             FogAttenuationDistance = 20000f,
             CloudAmbientDimmer = 1f

@@ -1,0 +1,44 @@
+using System;
+using SunGlasses.Systems;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+public static class GroundTintBehaviorCheck
+{
+    private static void Require(bool value, string message)
+    {
+        if (!value) throw new Exception(message);
+    }
+
+    public static string Run()
+    {
+        var source = new Color(.188f, .204f, .217f, .4f);
+        var p = new ColorParameter(source, false);
+        var correction = new GroundTintOverride();
+        correction.Apply(p, 0f);
+        Require(p.overrideState && p.value.Equals(new Color(0, 0, 0, .4f)), "black default / alpha");
+        correction.Apply(p, .5f);
+        var half = p.value;
+        for (int i = 0; i < 1000; i++) correction.Apply(p, .5f);
+        Require(p.value.Equals(half) && Math.Abs(half.r - .094f) < 0.000001f, "no repeated scaling");
+        correction.Apply(p, 1f);
+        Require(p.value.Equals(source), "one restores original");
+        correction.Apply(p, .5f);
+        correction.Release();
+        Require(p.value.Equals(source) && !p.overrideState, "unload restores color and override state");
+        correction.Apply(p, .5f);
+        var external = new Color(.8f, .6f, .2f, 1f);
+        p.value = external;
+        correction.Apply(p, .5f);
+        correction.Apply(p, 1f);
+        Require(p.value.Equals(external), "external source is recaptured");
+        var next = new ColorParameter(new Color(.1f, .2f, .3f, 1), true);
+        correction.Apply(next, 0f);
+        Require(p.value.Equals(external) && !p.overrideState, "scene replacement releases old parameter");
+        next.value = external;
+        correction.Release();
+        Require(next.value.Equals(external), "unload preserves newer external edit");
+        correction.Apply(null, 0f);
+        return "PASS: black default, alpha, repeated frames, 0.5/1 interpolation, unload, source changes, scene replacement, newer external edits and missing target";
+    }
+}

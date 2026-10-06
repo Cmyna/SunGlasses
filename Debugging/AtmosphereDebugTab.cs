@@ -18,6 +18,21 @@ namespace SunGlasses.Debugging
             if (system == null) return null;
             return new List<DebugUI.Widget>
             {
+                new DebugUI.FloatField
+                {
+                    displayName = "Ground tint weight (0 = black, 1 = original)",
+                    getter = () => RemapLightingSystem.GroundTintWeight,
+                    setter = value => RemapLightingSystem.GroundTintWeight = value,
+                    min = () => 0f,
+                    max = () => 1f,
+                    incStep = 0.01f
+                },
+                new DebugUI.Value
+                {
+                    displayName = "Ground tint (independent of atmosphere switch)",
+                    getter = () => world.GetExistingSystemManaged<RemapLightingSystem>()?.GroundTintStatus
+                        ?? "Waiting for lighting system"
+                },
                 new DebugUI.BoolField
                 {
                     displayName = "Enable atmosphere overrides",

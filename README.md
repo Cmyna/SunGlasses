@@ -3,6 +3,16 @@
 
 Lighting overrides run every frame in PreCulling, after the vanilla lighting system.
 Saved options are applied when the mod loads; missing options use the mod defaults.
+PBS ground tint is always corrected to black by default, independently of Color
+Correction, atmosphere overrides and the developer menu. There is no public option
+to disable it. **SunGlasses → Atmosphere → Ground tint weight (0 = black, 1 = original)**
+is a session-only 0–1 debug control: 0 is black, 1 is the captured original color,
+and intermediate values interpolate RGB while preserving alpha. The diagnostics row
+shows original and applied colors. It edits `Render Settings`' runtime Volume profile,
+not its shared asset. Scene changes recapture the source; unloading restores it unless
+another caller has since changed the parameter. Restarting/reloading the mod resets
+the debug weight to 0.
+
 `SunGlassesSunSpecularLight` follows the vanilla sun's transform, native Light
 settings and HDRP settings, with diffuse, volumetric and sky interaction disabled.
 The extra light does not cast shadows: HDRP allows only one directional light to
@@ -88,7 +98,7 @@ color correction remain active. This requires no dependency on another mod.
 
 **SunGlasses → Atmosphere** provides an **Enable atmosphere overrides** checkbox
 plus **Blend horizon tint by elevation** (enabled by default) and
-**Horizon white tint threshold (degrees, 0.01-90)** (default 90 degrees).
+**Horizon white tint threshold (degrees, 0.01-90)** (default 20 degrees).
 The horizon blends from its configured RGB at 0 degrees to white at the threshold,
 staying white above it and at the configured tint below the horizon. Disabling
 the blend keeps the fixed configured tint. These controls are independent of
