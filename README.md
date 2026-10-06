@@ -85,17 +85,18 @@ for interpolation, persistence, lifecycle and verification details.
 
 Atmosphere overrides now run as a game DOTS managed system in PreCulling after
 dynamic exposure, independent of Debug. A global `SunGlasses Atmosphere Volume`
-at priority 1500 overrides only eight selected sky, fog and cloud parameters,
+at priority 1500 overrides only six selected sky, fog and cloud parameters,
 above vanilla lighting (1000) and below Photo Mode (2000).
-Defaults are aerosol density 0.024, anisotropy 0.8, white aerosol tint,
-saturation 0.7, horizon RGB (0.5, 0.65, 1), fog RGB (0.8, 0.8, 1), fog attenuation
-distance 20000 meters and cloud layer A ambientProbeDimmer 1. Fog enable, color
+Defaults are aerosol density 0.024, white aerosol tint,
+saturation 0.7, horizon RGB (0.5, 0.65, 1), fixed fog RGB (0.67, 0.8075, 1),
+and cloud layer A ambientProbeDimmer 1. Aerosol anisotropy and
+fog attenuation distance are controlled by the game / Photo Mode. Fog enable, color
 mode, height, weather and other cloud parameters remain controlled by the game.
 
 When the native `ClimateSystem.fog.overrideState` is enabled (for example by
 Time & Weather Anarchy custom fog or the game's Debug Override Fog control),
-SunGlasses suspends both fog tint and attenuation-distance overrides. Turning
-custom fog off restores them on the next rendering update. Sky, clouds and sun
+SunGlasses suspends its fog tint override. Turning
+custom fog off restores it on the next rendering update. Sky, clouds and sun
 color correction remain active. This requires no dependency on another mod.
 
 **SunGlasses → Atmosphere** provides an **Enable atmosphere overrides** checkbox
@@ -110,6 +111,8 @@ configured and effective camera values, Volume status
 and a camera match check. Unchecking restores the underlying game / Photo Mode
 values; checking reapplies the current atmosphere configuration. The saved
 **Color Correction** option controls the same switch; Debug edits are temporary.
+Fog tint uses the same fixed color at all solar elevations, captured from Photo Mode.
+The effective camera row reports the game's fog distance without treating it as a mod override.
 See [atmosphere system documentation](doc/ai/atmosphere-system.md) for lifecycle,
 configuration boundaries and verification details.
 

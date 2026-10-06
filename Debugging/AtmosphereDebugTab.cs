@@ -85,14 +85,14 @@ namespace SunGlasses.Debugging
         private static string SkyText(AtmosphereParameters p)
         {
             return string.Format(CultureInfo.InvariantCulture,
-                "Density {0:G5}; anisotropy {1:G5}; aerosol {2}; saturation {3:G5}; horizon {4}",
-                p.AerosolDensity, p.AerosolAnisotropy, Rgb(p.AerosolTint), p.ColorSaturation, Rgb(p.HorizonTint));
+                "Density {0:G5}; aerosol {1}; saturation {2:G5}; horizon {3}",
+                p.AerosolDensity, Rgb(p.AerosolTint), p.ColorSaturation, Rgb(p.HorizonTint));
         }
 
         private static string FogText(AtmosphereParameters p)
         {
-            return string.Format(CultureInfo.InvariantCulture, "Fog {0}; distance {1:G5} m; cloud A ambient {2:G5}",
-                Rgb(p.FogTint), p.FogAttenuationDistance, p.CloudAmbientDimmer);
+            return string.Format(CultureInfo.InvariantCulture,
+                "Fog {0}; cloud A ambient {1:G5}", Rgb(p.FogTint), p.CloudAmbientDimmer);
         }
 
         private static VolumeStack CameraStack()
@@ -107,7 +107,7 @@ namespace SunGlasses.Debugging
             if (sky == null) return "Waiting for camera sky";
             return SkyText(new AtmosphereParameters
             {
-                AerosolDensity = sky.aerosolDensity.value, AerosolAnisotropy = sky.aerosolAnisotropy.value,
+                AerosolDensity = sky.aerosolDensity.value,
                 AerosolTint = sky.aerosolTint.value, ColorSaturation = sky.colorSaturation.value, HorizonTint = sky.horizonTint.value
             });
         }
@@ -118,11 +118,9 @@ namespace SunGlasses.Debugging
             var fog = stack?.GetComponent<Fog>();
             var clouds = stack?.GetComponent<CloudLayer>();
             if (fog == null || clouds == null) return "Waiting for camera fog / clouds";
-            return FogText(new AtmosphereParameters
-            {
-                FogTint = fog.tint.value, FogAttenuationDistance = fog.meanFreePath.value,
-                CloudAmbientDimmer = clouds.layerA.ambientProbeDimmer.value
-            });
+            return string.Format(CultureInfo.InvariantCulture,
+                "Fog {0}; game-controlled distance {1:G5} m; cloud A ambient {2:G5}",
+                Rgb(fog.tint.value), fog.meanFreePath.value, clouds.layerA.ambientProbeDimmer.value);
         }
 
         internal static string CameraCheck(AtmosphereSystem system)
@@ -135,11 +133,10 @@ namespace SunGlasses.Debugging
             var clouds = stack?.GetComponent<CloudLayer>();
             if (sky == null || fog == null || clouds == null) return "Waiting for camera stack";
             var p = system.Parameters;
-            bool matches = Close(sky.aerosolDensity.value, p.AerosolDensity) && Close(sky.aerosolAnisotropy.value, p.AerosolAnisotropy)
+            bool matches = Close(sky.aerosolDensity.value, p.AerosolDensity)
                 && Close(sky.colorSaturation.value, p.ColorSaturation) && Close(sky.aerosolTint.value, p.AerosolTint)
                 && Close(sky.horizonTint.value, system.ActiveHorizonTint)
-                && (system.FogOverridesSuspended || (Close(fog.tint.value, p.FogTint)
-                    && Close(fog.meanFreePath.value, p.FogAttenuationDistance)))
+                && (system.FogOverridesSuspended || Close(fog.tint.value, p.FogTint))
                 && Close(clouds.layerA.ambientProbeDimmer.value, p.CloudAmbientDimmer);
             return matches ? (system.FogOverridesSuspended
                 ? "Applied to main camera; fog delegated to custom fog" : "Applied to main camera")

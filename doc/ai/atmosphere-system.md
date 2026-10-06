@@ -13,29 +13,35 @@ The defaults now match the values displayed by the old Debug input fields, corre
 | HDRP parameter | Default |
 | --- | --- |
 | PhysicallyBasedSky.aerosolDensity | 0.024 |
-| PhysicallyBasedSky.aerosolAnisotropy | 0.8 |
+| PhysicallyBasedSky.aerosolAnisotropy | 不覆盖，由游戏 / Photo Mode 控制 |
 | PhysicallyBasedSky.aerosolTint | RGB (1, 1, 1) |
 | PhysicallyBasedSky.colorSaturation | 0.7 |
 | PhysicallyBasedSky.horizonTint | 基础 RGB (0.5, 0.65, 1)，默认随太阳高度渐变到白色 |
-| Fog.tint | RGB (0.8, 0.8, 1) |
-| Fog.meanFreePath | 20000 meters |
+| Fog.tint | 全天固定 RGB (0.67, 0.8075, 1) |
+| Fog.meanFreePath | 不覆盖，由游戏 / Photo Mode 控制 |
 | CloudLayer.layerA.ambientProbeDimmer | 1 |
 
-All components are created with Add(false), enabling overrideState only for these eight parameters. Fog enable, color mode, height, weather, cloud layer types, and other parameters remain under game control. Whether Fog.tint affects the final image therefore also depends on the underlying fog configuration; matching camera-stack parameters does not prove that the effect is visible in the current image.
+All components are created with Add(false), enabling overrideState only for six parameters (four sky, one fog, one cloud). Aerosol anisotropy, fog distance, enable, color mode, height, weather, cloud layer types, and other parameters remain under game control. Whether Fog.tint affects the final image therefore also depends on the underlying fog configuration; matching camera-stack parameters does not prove that the effect is visible in the current image.
 
-The global Volume is named SunGlasses Atmosphere Volume, with weight 1 and priority 1500, and uses the layer of LightingPostProcessVolume. It takes precedence over vanilla lighting (1000) and yields to enabled Photo Mode overrides (2000). When overrides are enabled, the mod controls these eight parameters unless a higher-priority Volume overrides them. When disabled, the underlying game or Photo Mode parameters take effect again.
+The global Volume is named SunGlasses Atmosphere Volume, with weight 1 and priority 1500, and uses the layer of LightingPostProcessVolume. It takes precedence over vanilla lighting (1000) and yields to enabled Photo Mode overrides (2000). When overrides are enabled, the mod controls six parameters unless a higher-priority Volume overrides them. When disabled, the underlying game or Photo Mode parameters take effect again.
 
 地平线色调默认启用按太阳高度渐变，变白阈值为 20°，与太阳光 tint 的阈值独立。太阳高度来自实际太阳 Transform 的方向；0° 时使用基础色调，0° 到阈值之间线性混合到白色，达到或超过阈值后保持白色，地平线以下保持基础色调。关闭混合后所有角度都使用基础色调。该逻辑在 Debug 面板关闭时仍每帧执行。
 
-Aerosol density, color saturation, and cloud ambient intensity must be in [0,1], anisotropy in [-1,1], and color channels in [0,1]. All values must be finite. 地平线变白阈值必须在 [0.01,90] 度范围内，即使混合关闭也须有效。The minimum fog attenuation distance is read directly from HDRP Fog.meanFreePath.min, verified locally as 1 meter. Invalid configurations are rejected as a whole without changing the existing valid configuration.
+雾色全天固定为 RGB (0.67,0.8075,1)，取自本轮运行中的 `PhotoModeRenderSystem.m_Fog.tint.value`，
+不是从已混合的相机 VolumeStack 推断；当时 Photo Mode 启用、CinematicControlVolume 优先级 2000。
+这是一份固定默认色，不会在后续运行中自动跟随 Photo Mode 编辑，也不受太阳高度影响。
+雾色角度插值、其调试控件和对应验证脚本已移除。雾距和气溶胶各向异性配置字段均已移除，
+AtmosphereSystem 不再读取或写入 meanFreePath、aerosolAnisotropy。
+
+Aerosol density, color saturation, cloud ambient intensity, and color channels must be in [0,1]. All values must be finite. 地平线变白阈值必须在 [0.01,90] 度范围内，即使混合关闭也须有效。Invalid configurations are rejected as a whole without changing the existing valid configuration.
 
 ## Updates and lifecycle
 
-自定义雾兼容：每帧读取游戏原生 ClimateSystem.fog.overrideState。为 true 时暂停本模组的 Fog.tint 和 Fog.meanFreePath 覆盖，让游戏气候雾接管；恢复为 false 后，下一次渲染更新重新启用这两个覆盖。适用于 Time & Weather Anarchy、自带开发者菜单 Override Fog，以及使用同一接口的其他模组，不依赖其程序集。太阳色调、天空与云层校正继续生效，因此仍可能改变雾的最终视觉观感。参数值在暂停期间保留，配置更新及资源重建后也遵循相同规则。
+自定义雾兼容：每帧读取游戏原生 ClimateSystem.fog.overrideState。为 true 时暂停本模组的 Fog.tint 覆盖，让游戏气候雾接管；恢复为 false 后，下一次渲染更新重新启用雾色覆盖。Fog.meanFreePath 始终不覆盖。适用于 Time & Weather Anarchy、自带开发者菜单 Override Fog，以及使用同一接口的其他模组，不依赖其程序集。太阳色调、天空与云层校正继续生效，因此仍可能改变雾的最终视觉观感。参数值在暂停期间保留，配置更新及资源重建后也遵循相同规则。
 
 The system is explicitly registered through UpdateSystem in PreCulling after DynamicExposureSystem. The current order is LightingSystem → RemapLightingSystem → DynamicExposureSystem → AtmosphereSystem.
 
-Each frame checks scene state, the sun Transform, and the original lighting Volume. Overrides are disabled with a waiting status while resources are unavailable or loading is in progress. The Volume is created once the scene is ready. 地平线色调每帧按当前太阳高度更新；其余参数仅在配置变化或资源重建后写入。
+Each frame checks scene state, the sun Transform, and the original lighting Volume. Overrides are disabled with a waiting status while resources are unavailable or loading is in progress. The Volume is created once the scene is ready. 地平线色调每帧按当前太阳高度更新；固定雾色和其余参数仅在配置变化或资源重建后写入。
 
 City preload suspends overrides and releases resources; loading completion permits recreation. System stop, mod disposal, and system destruction also release the Volume, Profile, and Profile components. If the scene destroys the host object itself, the system cleans up the old Profile before recreating resources. The game World can survive across cities, so resource cleanup does not depend on World destruction.
 
@@ -47,9 +53,18 @@ SunGlasses → Atmosphere provides the Enable atmosphere overrides checkbox and 
 
 **Blend horizon tint by elevation** 控制地平线渐变，**Horizon white tint threshold (degrees, 0.01-90)** 可输入变白角度，默认 20°。无效文本、非有限数和超范围输入保留上一份有效配置。**Horizon elevation / white weight / active tint** 显示太阳高度、白色混合比例与当前输出 RGB。Configured sky 显示基础色调；相机一致性检查使用当前渐变后的 ActiveHorizonTint。
 
-Atmosphere camera check compares the actively controlled parameters in the main camera's HDRP stack against the configuration. 自定义雾接管时跳过两项雾参数比较，显示 Applied to main camera; fog delegated to custom fog，同时提供 Fog overrides suspended for custom fog 状态。It displays Applied to main camera when all controlled parameters match, Off when the system or overrides are disabled, Waiting when resources are not ready, and Mismatch for competing Volumes or camera-layer mismatches. Color checks compare RGB, and scalar checks use small absolute/relative error tolerances.
+相机检查比较固定 FogTint，不再比较雾距或气溶胶各向异性。
+Effective camera fog / clouds 仅展示游戏实际雾距。
+
+Atmosphere camera check compares the actively controlled parameters in the main camera's HDRP stack against the configuration. 自定义雾接管时跳过雾色比较，显示 Applied to main camera; fog delegated to custom fog，同时提供 Fog overrides suspended for custom fog 状态。It displays Applied to main camera when all controlled parameters match, Off when the system or overrides are disabled, Waiting when resources are not ready, and Mismatch for competing Volumes or camera-layer mismatches. Color checks compare RGB, and scalar checks use small absolute/relative error tolerances.
 
 ## Implementation alignment and verification
+
+2026-10-06 按用户最新要求：取消雾距及气溶胶各向异性覆盖，雾色统一采用
+最新 Photo Mode RGB (0.67,0.8075,1)，不使用太阳角度插值。
+源码检查确认 AtmosphereSystem 无 meanFreePath / aerosolAnisotropy 访问，调试面板只读取游戏实际雾距。
+完整构建及官方后处理通过，零警告、零错误。构建期间游戏仍在运行，因此当时未部署或进行新版现场验证。
+以下为先前版本的历史验证记录，涉及八项覆盖或雾距修改的部分已被本次实现替代。
 
 2026-10-05 默认变白阈值由 30° 调整为 90°，同步代码与文档；确认处于有效范围 [0.01,90] 内。此默认值调整未重新构建或部署，当前游戏仍使用此前部署的 30° 默认值版本。
 

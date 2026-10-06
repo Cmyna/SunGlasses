@@ -22,7 +22,6 @@ namespace SunGlasses.Systems
         private PhysicallyBasedSky _sky;
         private Fog _fog;
         private CloudLayer _clouds;
-        private float _minimumFogDistance;
         private bool _dirty = true;
         private bool _loading;
 
@@ -40,15 +39,11 @@ namespace SunGlasses.Systems
             base.OnCreate();
             _planetary = World.GetOrCreateSystemManaged<PlanetarySystem>();
             _climate = World.GetOrCreateSystemManaged<ClimateSystem>();
-            // Read HDRP's actual constraint, including before any scene Volume exists.
-            var fog = ScriptableObject.CreateInstance<Fog>();
-            _minimumFogDistance = fog.meanFreePath.min;
-            Object.Destroy(fog);
         }
 
         public bool TrySetParameters(AtmosphereParameters parameters)
         {
-            if (!parameters.IsValid(_minimumFogDistance)) return false;
+            if (!parameters.IsValid()) return false;
             Parameters = parameters;
             _dirty = true;
             return true;
@@ -75,7 +70,6 @@ namespace SunGlasses.Systems
             // Disable our flags instead of writing into the game's climate Volume.
             FogOverridesSuspended = _climate.fog.overrideState;
             _fog.tint.overrideState = !FogOverridesSuspended;
-            _fog.meanFreePath.overrideState = !FogOverridesSuspended;
             _volume.enabled = OverridesEnabled;
             Status = !OverridesEnabled ? "Off: game / Photo Mode controls atmosphere"
                 : FogOverridesSuspended ? "Atmosphere overrides active; custom fog controls fog"
@@ -107,12 +101,10 @@ namespace SunGlasses.Systems
         {
             var p = Parameters;
             _sky.aerosolDensity.Override(p.AerosolDensity);
-            _sky.aerosolAnisotropy.Override(p.AerosolAnisotropy);
             _sky.aerosolTint.Override(p.AerosolTint);
             _sky.colorSaturation.Override(p.ColorSaturation);
-            // Fog enable, color mode, height and all other cloud controls stay with the game.
+            // Fog distance, enable, color mode, height and all other cloud controls stay with the game.
             _fog.tint.Override(p.FogTint);
-            _fog.meanFreePath.Override(p.FogAttenuationDistance);
             _clouds.layerA.ambientProbeDimmer.Override(p.CloudAmbientDimmer);
             _dirty = false;
         }

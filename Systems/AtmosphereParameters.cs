@@ -6,37 +6,33 @@ namespace SunGlasses.Systems
     public struct AtmosphereParameters
     {
         public float AerosolDensity;
-        public float AerosolAnisotropy;
         public Color AerosolTint;
         public float ColorSaturation;
         public Color HorizonTint;
         public bool HorizonTintBlendByElevation;
         public float HorizonTintWhiteAngle;
         public Color FogTint;
-        public float FogAttenuationDistance;
         public float CloudAmbientDimmer;
 
         public static AtmosphereParameters Defaults => new AtmosphereParameters
         {
             AerosolDensity = 0.024f,
-            AerosolAnisotropy = 0.8f,
             AerosolTint = Color.white,
             ColorSaturation = 0.7f,
             HorizonTint = new Color(0.5f, 0.65f, 1f, 1f),
             HorizonTintBlendByElevation = true,
             HorizonTintWhiteAngle = 20f,
-            FogTint = new Color(0.8f, 0.8f, 1f, 1f),
-            FogAttenuationDistance = 20000f,
+            // Captured from the user's Photo Mode fog tint on 2026-10-06.
+            FogTint = new Color(0.67f, 0.8075f, 1f, 1f),
             CloudAmbientDimmer = 1f
         };
 
-        public bool IsValid(float minimumFogDistance)
+        public bool IsValid()
         {
-            return InRange(AerosolDensity, 0f, 1f) && InRange(AerosolAnisotropy, -1f, 1f)
+            return InRange(AerosolDensity, 0f, 1f)
                 && InRange(ColorSaturation, 0f, 1f) && InRange(CloudAmbientDimmer, 0f, 1f)
                 && ValidColor(AerosolTint) && ValidColor(HorizonTint) && ValidColor(FogTint)
-                && InRange(HorizonTintWhiteAngle, 0.01f, 90f)
-                && InRange(FogAttenuationDistance, minimumFogDistance, float.MaxValue);
+                && InRange(HorizonTintWhiteAngle, 0.01f, 90f);
         }
 
         private static bool ValidColor(Color color)
