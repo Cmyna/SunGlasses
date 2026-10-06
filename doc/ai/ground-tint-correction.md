@@ -2,15 +2,22 @@
 
 ## 行为
 
-SunGlasses 默认将 `Render Settings` GO 的运行时 Volume Profile 中
-`PhysicallyBasedSky.groundTint` 设为黑色。修正随 RemapLightingSystem 每帧运行，
+SunGlasses 根据实际太阳高度，调整 `Render Settings` GO 的运行时 Volume Profile 中
+`PhysicallyBasedSky.groundTint`：太阳高度 ≤0° 保留原色，≥5° 使用黑色，
+0–5° 在线性 RGB 上渐变。修正随 RemapLightingSystem 每帧运行，
 独立于 Color Correction、Atmosphere Overrides、曝光曲线及开发者菜单是否开启。
 正常设置页没有相关开关。
 
-开发者菜单 `SunGlasses → Atmosphere → Ground tint weight (0 = black, 1 = original)`
-提供一个 0–1 FloatField，步长 0.01。0 为黑色，1 为绑定参数时捕获的原色，
-中间值在线性 RGB 上插值并保留原 Alpha。拒绝 NaN/Infinity，有限值限制到 0–1。
+开发者菜单 `SunGlasses → Atmosphere → Daytime ground tint weight (0 = black, 1 = original)`
+提供一个 0–1 FloatField，步长 0.01，控制 ≥5° 的白天终点。默认 0 为黑色，
+1 为绑定参数时捕获的原色；夜间终点始终为原色，0–5° 过渡到所选白天终点。
+保留原 Alpha。拒绝 NaN/Infinity，有限值限制到 0–1。
 权重只在本次运行中保留，不进入 Setting，不写存档；Mod.OnLoad 重置为 0。
+
+实际原色权重为 `Lerp(1, daytimeWeight, Clamp01(elevation / 5))`。
+太阳高度使用 `Asin(Clamp(-sun.transform.forward.y, -1, 1))` 转为角度，
+不依赖上一帧的 SunTintElevation 或时钟时间；太阳尚未有效时释放修改。
+诊断显示当前高度、有效原色权重、原色及输出。
 
 ## 生命周期
 
@@ -33,6 +40,10 @@ sky hash 从 1849955632 变成 1255825280，SH 探针明显改变，建筑阴影
 实际游戏 Unity Color/ColorParameter 的离线行为检查覆盖：黑色与 Alpha、0.5/1 插值、
 1000 帧不累乘、卸载还原颜色和覆盖标记、外部颜色更新、参数对象切换、外部编辑保留、
 空目标。脚本见 `research/test-ground-tint.ps1`，不需要启动游戏。
+
+后续夜间反馈：PBS groundTint 也是夜晚环境光的一部分，全天全黑导致夜景照明不足。
+按用户要求增加 0–5° 插值；边界 -20/0/5/40°、过渡 1/2.5/4°、夜间保留原色、
+白天调试终点与过渡混合的行为检查通过。这替代此前全天全黑的默认行为。
 
 构建命令：`dotnet build SunGlasses.csproj -c Debug -p:DeployLocalMod=false`。
 运行中的程序集不能通过一次构建替换；构建与实际新 DLL 的现场 UI 验证要分别记录。

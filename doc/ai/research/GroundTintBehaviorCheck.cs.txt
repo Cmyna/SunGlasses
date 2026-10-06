@@ -12,6 +12,17 @@ public static class GroundTintBehaviorCheck
 
     public static string Run()
     {
+        var angles = new[] { -20f, 0f, 1f, 2.5f, 4f, 5f, 40f };
+        var expected = new[] { 1f, 1f, .8f, .5f, .2f, 0f, 0f };
+        for (int i = 0; i < angles.Length; i++)
+        {
+            Require(Math.Abs(GroundTintOverride.WeightForElevation(angles[i], 0f) - expected[i]) < .000001f,
+                "sun elevation fade boundary / interpolation");
+            Require(GroundTintOverride.WeightForElevation(angles[i], 1f) == 1f, "debug original at all elevations");
+        }
+        Require(GroundTintOverride.WeightForElevation(-10f, .5f) == 1f, "night always restores original");
+        Require(GroundTintOverride.WeightForElevation(5f, .5f) == .5f, "daytime debug weight");
+        Require(GroundTintOverride.WeightForElevation(2.5f, .5f) == .75f, "debug weight during transition");
         var source = new Color(.188f, .204f, .217f, .4f);
         var p = new ColorParameter(source, false);
         var correction = new GroundTintOverride();
@@ -39,6 +50,6 @@ public static class GroundTintBehaviorCheck
         correction.Release();
         Require(next.value.Equals(external), "unload preserves newer external edit");
         correction.Apply(null, 0f);
-        return "PASS: black default, alpha, repeated frames, 0.5/1 interpolation, unload, source changes, scene replacement, newer external edits and missing target";
+        return "PASS: elevation fade boundaries, twilight interpolation, daytime debug weight, black default, alpha, repeated frames, 0.5/1 interpolation, unload, source changes, scene replacement, newer external edits and missing target";
     }
 }

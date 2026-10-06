@@ -20,7 +20,7 @@ namespace SunGlasses.Debugging
             {
                 new DebugUI.FloatField
                 {
-                    displayName = "Ground tint weight (0 = black, 1 = original)",
+                    displayName = "Daytime ground tint weight (0 = black, 1 = original)",
                     getter = () => RemapLightingSystem.GroundTintWeight,
                     setter = value => RemapLightingSystem.GroundTintWeight = value,
                     min = () => 0f,

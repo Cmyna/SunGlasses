@@ -3,12 +3,14 @@
 
 Lighting overrides run every frame in PreCulling, after the vanilla lighting system.
 Saved options are applied when the mod loads; missing options use the mod defaults.
-PBS ground tint is always corrected to black by default, independently of Color
+PBS ground tint fades from its original color at sun elevation <= 0 degrees to
+black at >= 5 degrees by default, independently of Color
 Correction, atmosphere overrides and the developer menu. There is no public option
-to disable it. **SunGlasses → Atmosphere → Ground tint weight (0 = black, 1 = original)**
-is a session-only 0–1 debug control: 0 is black, 1 is the captured original color,
-and intermediate values interpolate RGB while preserving alpha. The diagnostics row
-shows original and applied colors. It edits `Render Settings`' runtime Volume profile,
+to disable it. **SunGlasses → Atmosphere → Daytime ground tint weight (0 = black, 1 = original)**
+is a session-only 0–1 debug control for the daytime endpoint. Night always retains
+the original color; 0–5 degrees interpolates to the chosen daytime endpoint.
+RGB is interpolated while preserving alpha. The diagnostics row shows sun elevation,
+effective original-color weight, original and applied colors. It edits `Render Settings`' runtime Volume profile,
 not its shared asset. Scene changes recapture the source; unloading restores it unless
 another caller has since changed the parameter. Restarting/reloading the mod resets
 the debug weight to 0.

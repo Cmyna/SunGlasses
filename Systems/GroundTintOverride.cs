@@ -15,6 +15,12 @@ namespace SunGlasses.Systems
         internal Color Applied => applied;
         internal bool IsBound => parameter != null;
 
+        internal static float WeightForElevation(float elevation, float daytimeWeight)
+        {
+            // Below the horizon retain the original ground lighting; fade it out by 5 degrees.
+            return Mathf.Lerp(1f, Mathf.Clamp01(daytimeWeight), Mathf.Clamp01(elevation / 5f));
+        }
+
         internal void Apply(ColorParameter target, float weight)
         {
             if (!ReferenceEquals(parameter, target))
