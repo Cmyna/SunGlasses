@@ -5,13 +5,13 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using SunGlasses.Systems;
+using Game.Simulation;
 using UnityEngine;
-using UnityEngine.Rendering.HighDefinition;
 
 namespace SunGlasses.Debugging
 {
     // Calibration samples are deliberately separate from the mod's normal settings.
-    public sealed class ExposureCalibrationController
+    public sealed class ExposureSamplingController
     {
         private const float MinimumEv = -10f;
         private const float MaximumEv = 20f;
@@ -45,11 +45,12 @@ namespace SunGlasses.Debugging
 
         private readonly List<Sample> _samples = new List<Sample>();
         private readonly DynamicExposureSystem _runtime;
-        private readonly ExposureDebugSystem _debug;
+        private readonly PlanetarySystem _planetary;
+        private bool _timeOwned, _previousOverride;
+        private float _previousTime, _lastTime;
         public event Action SamplesChanged;
         private bool _previewEnabled;
         private bool _samplesLoadFailed;
-        public string ActiveCurve { get; private set; } = "Custom";
         private float _center = 11.5f;
         private float _width = 1f;
         private string _timeText = "12";
@@ -59,16 +60,25 @@ namespace SunGlasses.Debugging
         public IReadOnlyList<Sample> Samples => _samples;
         public bool PreviewEnabled
         {
-            get => _previewEnabled;
+            get => _previewEnabled && _runtime.ManualOverrideEnabled;
             set { _previewEnabled = value; ApplyPreview(); }
         }
-        public bool DynamicEnabled
+        public bool CustomEnabled
         {
-            get => _runtime.DynamicEnabled;
+            get => _runtime.ActiveCurve == "Custom";
             set
             {
-                _runtime.DynamicEnabled = value;
-                _status = value ? "Dynamic exposure enabled" : "Dynamic exposure disabled";
+                if (value) ApplyCustomCurve();
+                else
+                {
+                    try
+                    {
+                        _runtime.ApplyPreset(_runtime.SelectedPreset);
+                        ResetPreview();
+                        _status = "Custom curve disabled; preset restored";
+                    }
+                    catch (Exception ex) { _status = "Could not restore preset: " + ex.Message; }
+                }
             }
         }
         public string CenterText
@@ -118,54 +128,18 @@ namespace SunGlasses.Debugging
                     _status = "Enter decimal hours from 0 to less than 24";
                     return;
                 }
-                _debug.SetTime(hours);
+                SetTime(hours);
                 _status = "Time applied";
             }
         }
         public string Status => _status;
-        private string CustomFilePath => Path.Combine(Application.persistentDataPath, "SunGlasses", FileName);
-        public string FilePath => ActiveCurve == "Custom" ? CustomFilePath : "Resources/exposure-curve/" + ActiveCurve + ".json (bundled)";
+        public string FilePath => Path.Combine(Application.persistentDataPath, "SunGlasses", FileName);
 
-        public void SwitchCurve(string curve)
+        public ExposureSamplingController(DynamicExposureSystem runtime, PlanetarySystem planetary)
         {
-            if (curve != "bright" && curve != "realistic" && curve != "Custom") return;
-            try
-            {
-                List<Sample> loaded;
-                if (curve == "Custom" && !File.Exists(CustomFilePath)) loaded = new List<Sample>();
-                else
-                {
-                    using (var input = curve == "Custom" ? File.OpenRead(CustomFilePath) :
-                        typeof(ExposureCalibrationController).Assembly.GetManifestResourceStream("SunGlasses.ExposureCurves." + curve + ".json"))
-                    {
-                        if (input == null) throw new FileNotFoundException("Bundled exposure curve not found: " + curve);
-                        loaded = ReadSamples(input);
-                    }
-                }
-                if (curve != "Custom" && loaded.Count == 0) throw new InvalidDataException("Exposure curve has no samples");
-                var runtimeCurve = curve == "Custom" ? null : ExposureCurve.LoadBundled(curve);
-                _samples.Clear();
-                _samples.AddRange(loaded);
-                ActiveCurve = curve;
-                if (curve == "Custom") _samplesLoadFailed = false;
-                if (curve != "Custom") _runtime.SetCurve(runtimeCurve, curve);
-                _previewEnabled = false;
-                ApplyPreview();
-                _status = "Using " + curve + ": " + loaded.Count + " samples";
-                SamplesChanged?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                _status = "Curve switch failed; previous curve retained: " + ex.Message;
-                Mod.Log.Error(_status);
-            }
-        }
-
-        public ExposureCalibrationController(DynamicExposureSystem runtime, ExposureDebugSystem debug)
-        {
-            _runtime = runtime; _debug = debug;
-            LoadSamples();
-            SwitchCurve("realistic");
+            _runtime = runtime; _planetary = planetary;
+            _timeText = FormatTime(_planetary.time);
+            ReloadSamples();
         }
         private void ApplyPreview()
         {
@@ -175,7 +149,7 @@ namespace SunGlasses.Debugging
         public void ResetPreview() { _previewEnabled = false; _runtime.ClearManualOverride(); }
         public void ApplyCustomCurve()
         {
-            if (ActiveCurve != "Custom" || _samples.Count == 0) { _status = "Select Custom and record samples first"; return; }
+            if (_samples.Count == 0) { _status = "Record custom samples first"; return; }
             var points = new ExposureCurve.Point[_samples.Count];
             for (int i = 0; i < points.Length; i++)
             {
@@ -186,38 +160,33 @@ namespace SunGlasses.Debugging
             try { _runtime.SetCurve(new ExposureCurve(points), "Custom"); ResetPreview(); _status = "Custom curve applied"; }
             catch (Exception ex) { _status = "Custom curve rejected: " + ex.Message; }
         }
-        public string SolarElevation() { var s = _runtime.GetSnapshot(); return s.Ready ? s.SolarElevationDegrees.ToString("F3", CultureInfo.InvariantCulture) + "°" : "Waiting for sun / exposure"; }
-        public string SolarArcAngleText() { var s = _runtime.GetSnapshot(); return s.Ready ? ExposureCurve.SolarArcAngle(s.SolarElevationDegrees, s.TimeOfDayHours).ToString("F3", CultureInfo.InvariantCulture) + "°" : "Waiting for sun / exposure"; }
-        public string AppliedRange() { var s = _runtime.GetSnapshot(); return s.Ready ? string.Format(CultureInfo.InvariantCulture, "{0:F3} .. {1:F3} EV100", s.MinimumEv100, s.MaximumEv100) : "Waiting for sun / exposure"; }
-        public string ActiveInterpolationSamples() => _runtime.InterpolationDescription;
-        public string RuntimeCurve => _runtime.ActiveCurve;
-        public string EffectiveRange()
+        private void SetTime(float hours)
         {
-            var camera = Camera.main;
-            if (camera == null) return "No main camera";
-            var exposure = HDCamera.GetOrCreate(camera, 0).volumeStack?.GetComponent<Exposure>();
-            return exposure == null ? "Waiting for camera stack" :
-                string.Format(CultureInfo.InvariantCulture, "{0:F3} .. {1:F3} EV100 ({2})", exposure.limitMin.value, exposure.limitMax.value, exposure.mode.value);
+            if (!_timeOwned)
+            {
+                _previousOverride = _planetary.overrideTime;
+                _previousTime = _planetary.time;
+                _timeOwned = true;
+            }
+            _planetary.overrideTime = true;
+            _planetary.time = hours;
+            _lastTime = hours;
         }
-        public string PreviewCheck()
+        public void ReleaseTime()
         {
-            if (!_runtime.ManualOverrideEnabled && !_runtime.DynamicEnabled) return "Off: game volumes control exposure";
-            var snapshot = _runtime.GetSnapshot();
-            if (!snapshot.Ready) return "Waiting for sun or lighting volume";
-            var camera = Camera.main;
-            if (camera == null) return "Waiting for main camera";
-            var effective = HDCamera.GetOrCreate(camera, 0).volumeStack?.GetComponent<Exposure>();
-            if (effective == null) return "Waiting for camera stack";
-            if (effective.mode.value != ExposureMode.Automatic && effective.mode.value != ExposureMode.AutomaticHistogram)
-                return "Effective exposure mode is " + effective.mode.value;
-            return Mathf.Abs(effective.limitMin.value - snapshot.MinimumEv100) < 0.01f &&
-                Mathf.Abs(effective.limitMax.value - snapshot.MaximumEv100) < 0.01f
-                ? "Applied to main camera" : "Mismatch: check camera layer mask or competing Volume";
+            // Relinquish ownership without overwriting a subsequent caller's override.
+            if (_timeOwned && _planetary.overrideTime && Mathf.Approximately(_planetary.time, _lastTime))
+            {
+                _planetary.time = _previousTime;
+                _planetary.overrideTime = _previousOverride;
+            }
+            _timeOwned = false;
+            _timeText = FormatTime(_planetary.time);
+            _status = "Time control released";
         }
-        public void ReleaseTime() { _debug.ReleaseTime(); _timeText = FormatTime(_debug.CurrentTime); _status = "Time control released"; }
+        public void Shutdown() { ReleaseTime(); ResetPreview(); }
         public void Record()
         {
-            if (ActiveCurve != "Custom") { _status = "Switch to Custom before editing samples"; return; }
             var s = _runtime.GetSnapshot();
             if (!s.Ready) { _status = "Cannot record: no sun or active exposure"; return; }
             _samples.Add(new Sample { recordedAtUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
@@ -227,17 +196,21 @@ namespace SunGlasses.Debugging
         }
         public void RemoveSample(Sample sample)
         {
-            if (ActiveCurve != "Custom") { _status = "Switch to Custom before editing samples"; return; }
             if (!_samples.Remove(sample)) return;
             SaveSamples(); SamplesChanged?.Invoke();
         }
-        private void LoadSamples()
+        public void ReloadSamples()
         {
             try
             {
-                if (!File.Exists(CustomFilePath)) return;
-                using (var input = File.OpenRead(CustomFilePath)) _samples.AddRange(ReadSamples(input));
+                var loaded = new List<Sample>();
+                if (File.Exists(FilePath))
+                    using (var input = File.OpenRead(FilePath)) loaded = ReadSamples(input);
+                _samples.Clear();
+                _samples.AddRange(loaded);
+                _samplesLoadFailed = false;
                 _status = "Loaded " + _samples.Count + " samples";
+                SamplesChanged?.Invoke();
             }
             catch (Exception ex)
             {
@@ -266,7 +239,6 @@ namespace SunGlasses.Debugging
 
         private void SaveSamples()
         {
-            if (ActiveCurve != "Custom") return;
             if (_samplesLoadFailed)
             {
                 _status = "Save skipped: existing sample file could not be loaded";

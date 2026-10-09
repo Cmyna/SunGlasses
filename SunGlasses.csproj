@@ -23,6 +23,11 @@
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
 
+    <!-- Debug extensions are excluded together; optional partial calls disappear with them. -->
+    <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+      <Compile Remove="**\*.Debug.cs" />
+    </ItemGroup>
+
 	<!-- Build with -p:DeployLocalMod=false while the game is running. -->
 	<Target Name="DeployWIP" AfterTargets="AfterBuild" Condition="'$(NeedBuild)' and '$(DeployLocalMod)' != 'false'">
 		<ItemGroup>

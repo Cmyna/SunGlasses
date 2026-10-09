@@ -26,9 +26,10 @@ namespace SunGlasses.Systems
         private ExposureCurve _curve;
         private GameObject _originalVolume;
         private ExposureSnapshot _snapshot;
-        private float _manualMinimum, _manualMaximum;
+        partial void ResetExposureOverride();
+        partial void ApplyExposureOverride(ref ExposureSnapshot snapshot, ref string description);
         public bool DynamicEnabled { get; set; } = true;
-        public bool ManualOverrideEnabled { get; private set; }
+        public Setting.ExposureCurvePreset SelectedPreset { get; private set; } = Setting.ExposureCurvePreset.Realistic;
         public string ActiveCurve { get; private set; } = "realistic";
         public string InterpolationDescription { get; private set; } = "Waiting for sun";
         protected override void OnCreate()
@@ -48,22 +49,19 @@ namespace SunGlasses.Systems
         {
             if (preset == Setting.ExposureCurvePreset.None)
             {
-                ClearManualOverride();
+                ResetExposureOverride();
+                _curve = null;
+                ActiveCurve = "None";
+                SelectedPreset = preset;
                 DynamicEnabled = false;
                 return;
             }
             var name = preset == Setting.ExposureCurvePreset.Bright ? "bright" : "realistic";
             if (_curve == null || ActiveCurve != name) SetCurve(ExposureCurve.LoadBundled(name), name);
-            ClearManualOverride();
+            ResetExposureOverride();
+            SelectedPreset = preset;
             DynamicEnabled = true;
         }
-        public void SetManualOverride(float minimum, float maximum)
-        {
-            if (float.IsNaN(minimum) || float.IsNaN(maximum) || minimum < -10 || maximum > 20 || minimum > maximum)
-                throw new ArgumentOutOfRangeException(nameof(minimum));
-            _manualMinimum = minimum; _manualMaximum = maximum; ManualOverrideEnabled = true;
-        }
-        public void ClearManualOverride() { ManualOverrideEnabled = false; }
         public ExposureSnapshot GetSnapshot() => _snapshot;
         private ExposureSnapshot CalculateSnapshot()
         {
@@ -72,12 +70,16 @@ namespace SunGlasses.Systems
                 float.IsNaN(_planetary.time) || float.IsInfinity(_planetary.time)) return snapshot;
             snapshot.TimeOfDayHours = _planetary.time;
             snapshot.SolarElevationDegrees = Mathf.Asin(Mathf.Clamp(-_planetary.SunLight.transform.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
-            float minimum, maximum;
-            string description;
-            if (ManualOverrideEnabled) { minimum = _manualMinimum; maximum = _manualMaximum; description = "Off (manual override)"; }
-            else if (!DynamicEnabled || _curve == null || !_curve.Evaluate(snapshot.SolarElevationDegrees, snapshot.TimeOfDayHours,
-                out minimum, out maximum, out description)) return snapshot;
-            snapshot.MinimumEv100 = minimum; snapshot.MaximumEv100 = maximum; snapshot.Ready = true;
+            var description = string.Empty;
+            ApplyExposureOverride(ref snapshot, ref description);
+            if (!snapshot.Ready)
+            {
+                if (!DynamicEnabled || _curve == null || !_curve.Evaluate(snapshot.SolarElevationDegrees, snapshot.TimeOfDayHours,
+                    out var minimum, out var maximum, out description)) return snapshot;
+                snapshot.MinimumEv100 = minimum;
+                snapshot.MaximumEv100 = maximum;
+                snapshot.Ready = true;
+            }
             InterpolationDescription = description;
             return snapshot;
         }
@@ -114,7 +116,7 @@ namespace SunGlasses.Systems
             _exposure.limitMin.value = snapshot.MinimumEv100; _exposure.limitMax.value = snapshot.MaximumEv100;
             _snapshot = snapshot;
         }
-        protected override void OnGamePreload(Purpose purpose, GameMode mode) { ClearManualOverride(); ReleaseVolume(); }
+        protected override void OnGamePreload(Purpose purpose, GameMode mode) { Shutdown(); }
         private void ReleaseVolume()
         {
             if (_volume != null) _volume.enabled = false;
@@ -123,7 +125,11 @@ namespace SunGlasses.Systems
             _host = null; _volume = null; _profile = null; _exposure = null;
             _originalVolume = null; _snapshot = default;
         }
-        public void Shutdown() { ClearManualOverride(); ReleaseVolume(); }
+        public void Shutdown()
+        {
+            ResetExposureOverride();
+            ReleaseVolume();
+        }
         protected override void OnStopRunning() { Shutdown(); base.OnStopRunning(); }
         protected override void OnDestroy() { Shutdown(); base.OnDestroy(); }
     }

@@ -6,13 +6,16 @@ using UnityEngine.Rendering;
 namespace SunGlasses.Debugging
 {
     [DebugContainer]
-    internal static class SunGlassesDebugTab
+    internal static partial class SunGlassesDebugTab
     {
+        static partial void AddSamplingSection(List<DebugUI.Widget> widgets);
+
         [DebugTab("SunGlasses", 100)]
         internal static List<DebugUI.Widget> Build()
         {
             var widgets = new List<DebugUI.Widget>();
-            AddSection(widgets, "Exposure", ExposureCalibrationDebugTab.Build());
+            AddSection(widgets, "Exposure", ExposureDebugSystem.Instance?.BuildWidgets());
+            AddSamplingSection(widgets);
             AddSection(widgets, "Sun", SunLightingDebugTab.Build());
             AddSection(widgets, "Atmosphere", AtmosphereDebugTab.Build());
             return widgets;
