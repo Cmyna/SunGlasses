@@ -36,9 +36,22 @@ High value will make shadow lookes more blue (Because most of ambient lighting c
 
 Choose None to use the game's exposure bounds, or Realistic (default) / Bright to apply a dynamic exposure curve. Color Correction independently enables atmosphere adjustments and is enabled by default. Both choices are saved in mod settings.
 
+### Possible Incompatibilities
+
+Lumina: partial compatibility, based on a source-code review of Lumina main (commit 2a9a4a3, reviewed on 2026-10-10). Combined use has not yet been verified in-game with the published builds.
+
+- Custom Sun: both mods control sun disk size and flare size; SunGlasses reapplies these settings every frame. Disable Lumina Custom Sun and avoid its sun sliders when using SunGlasses.
+- HDRI/Cubemap: Lumina replaces the physically based sky that SunGlasses sky exposure, sky color correction, and ground tint adjustments rely on. Disable HDRI/Cubemap to retain the full SunGlasses sky corrections. This does not imply that fog, exposure, or sun controls stop working.
+- Exposure and grading: SunGlasses automatic exposure bounds and Lumina Post Exposure affect different parameters and can work together. LUTs, white balance, and other grading also combine with SunGlasses corrections; adjust them together if the result is too bright or has an unwanted color cast. Exposure Curve: None disables SunGlasses automatic exposure if preferred.
+- Disabling SunGlasses Color Correction or choosing Exposure Curve: None does not hand all lighting control to Lumina. Sun disk size, ground tint correction, and reduced sunlight specular highlights remain active.
+
+For SunGlasses Debug builds, avoid using exposure calibration time controls together with Lumina time controls. The calibration code is excluded from Release builds.
+
 ### NOTES
 
 Sun Bloom Settings in mod will overwrite the effects in PhotoMode, 
 while exposure curves and atmosphere color correction yield to enabled PhotoMode overrides.
+
+All cloud settings, including distant clouds and volumetric clouds, can substantially change the color of daytime ambient lighting. In general, more cloud cover makes shadows look more muted and whitish around noon, and more orange or pink at dawn and dusk. Less cloud cover shifts shadows toward blue and cooler tones.
 
 

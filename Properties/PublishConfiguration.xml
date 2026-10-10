@@ -45,15 +45,21 @@ High value will make shadow lookes more blue (Because most of ambient lighting c
 
 Choose None to use the game's exposure bounds, or Realistic (default) / Bright to apply a dynamic exposure curve. Color Correction independently enables atmosphere adjustments and is enabled by default. Both choices are saved in mod settings.
 
-# Possible Imcompability
+# Possible Incompatibilities
 
-Lumina(v1.5.2): both two mods overwrite the camera exposure. So it may cause some conflict.
-You can set Exposure Curve to None to reduce exposure conflicts.
+Lumina: partial compatibility, based on a source-code review of Lumina main (commit 2a9a4a3, reviewed on 2026-10-10). Combined use has not yet been verified in-game with the published builds.
+
+- Custom Sun: both mods control sun disk size and flare size; SunGlasses reapplies these settings every frame. Disable Lumina Custom Sun and avoid its sun sliders when using SunGlasses.
+- HDRI/Cubemap: Lumina replaces the physically based sky that SunGlasses sky exposure, sky color correction, and ground tint adjustments rely on. Disable HDRI/Cubemap to retain the full SunGlasses sky corrections. This does not imply that fog, exposure, or sun controls stop working.
+- Exposure and grading: SunGlasses automatic exposure bounds and Lumina Post Exposure affect different parameters and can work together. LUTs, white balance, and other grading also combine with SunGlasses corrections; adjust them together if the result is too bright or has an unwanted color cast. Exposure Curve: None disables SunGlasses automatic exposure if preferred.
+- Disabling SunGlasses Color Correction or choosing Exposure Curve: None does not hand all lighting control to Lumina. Sun disk size, ground tint correction, and reduced sunlight specular highlights remain active.
 
 ## NOTES
 
 Sun Bloom Settings in mod will overwrite the effects in PhotoMode,
 while exposure curves and atmosphere color correction yield to enabled PhotoMode overrides.
+
+All cloud settings, including distant clouds and volumetric clouds, can substantially change the color of daytime ambient lighting. In general, more cloud cover makes shadows look more muted and whitish around noon, and more orange or pink at dawn and dusk. Less cloud cover shifts shadows toward blue and cooler tones.
   </LongDescription>
 	<Thumbnail Value="Properties/Thumbnail2.png" />
   <Screenshot Value="Properties/Thumbnail.png" />
@@ -61,12 +67,23 @@ while exposure curves and atmosphere color correction yield to enabled PhotoMode
   <Screenshot Value="Properties/Screenshots/HUGE_SUN.png" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/sunglasses.1651414/" />
-	<ModVersion Value="1.2" />
+	<ModVersion Value="2.0" />
 	<GameVersion Value="1.*" />
   <!-- I18n every where -->
 	<Dependency Id="75426" />
   <ChangeLog>
-Update for Game version 1.3.6f1
+## SunGlasses 2.0
+
+- Reworked automatic exposure with dynamic curves based on sun position. Choose None, Realistic (default), or Bright; replaces the old dark-area histogram adjustment.
+- Added an independent Color Correction option (enabled by default) for sunlight, sky, fog, and clouds, with sun and horizon tints that blend toward white as the sun rises.
+- Reduced sunlight specular highlights while retaining the vanilla sun's shadows.
+- Corrected daytime ground tint while preserving the original nighttime tint, with a smooth transition near sunrise and sunset.
+- Exposure curves and atmosphere color correction respect enabled Photo Mode overrides. Sun bloom continues to override Photo Mode bloom settings.
+- Fog tint yields to custom fog from Time &amp; Weather Anarchy or the game's Debug Override Fog control. Native fog distance and aerosol anisotropy remain controlled by the game.
+- Saved settings are applied when the mod loads. Runtime exposure and atmosphere corrections work independently of the developer menu; exposure sampling and calibration tools are excluded from Release builds.
+- Fixed SunGlasses settings not taking effect after starting the game and loading a save.
+
+Compatibility: Lumina Custom Sun and HDRI/Cubemap overlap with SunGlasses lighting and sky controls. See Possible Incompatibilities above for recommended settings; Lumina Post Exposure can work alongside SunGlasses automatic exposure.
   </ChangeLog>
   <ExternalLink Type="github" Url="https://github.com/Cmyna/SunGlasses" />
 </Publish>
