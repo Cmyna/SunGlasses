@@ -17,6 +17,7 @@ Options to adjust sun &amp; sky &amp; exposure settings, includes:
 - Enable/Disbale lens flare when facing sun
 - Sky exposure
 - Daytime Ambient lighting control
+- Ground fill light (0–1)
 - Exposure curve: None, Realistic or Bright
 - Independent color correction toggle
 
@@ -40,6 +41,10 @@ This option can adjust the sky exposure. Higher value will also brighten everyth
 
 Behave likes those mods with shadow strength adjustment / ambient lighting in CS1, but only affects daytime lighting.
 High value will make shadow lookes more blue (Because most of ambient lighting comes from sky)
+
+## Ground Fill Light
+
+Adjust daytime ground fill light from 0 (off, default) to 1 (original lighting). Nighttime ground lighting is preserved, with a smooth transition near sunrise and sunset. This option is saved in mod settings.
 
 ## Exposure Curve and Color Correction
 
@@ -67,23 +72,15 @@ All cloud settings, including distant clouds and volumetric clouds, can substant
   <Screenshot Value="Properties/Screenshots/HUGE_SUN.png" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/sunglasses.1651414/" />
-	<ModVersion Value="2.0" />
+	<ModVersion Value="2.1" />
 	<GameVersion Value="1.*" />
   <!-- I18n every where -->
 	<Dependency Id="75426" />
   <ChangeLog>
-## SunGlasses 2.0
+## SunGlasses 2.1
 
-- Reworked automatic exposure with dynamic curves based on sun position. Choose None, Realistic (default), or Bright; replaces the old dark-area histogram adjustment.
-- Added an independent Color Correction option (enabled by default) for sunlight, sky, fog, and clouds, with sun and horizon tints that blend toward white as the sun rises.
-- Reduced sunlight specular highlights while retaining the vanilla sun's shadows.
-- Corrected daytime ground tint while preserving the original nighttime tint, with a smooth transition near sunrise and sunset.
-- Exposure curves and atmosphere color correction respect enabled Photo Mode overrides. Sun bloom continues to override Photo Mode bloom settings.
-- Fog tint yields to custom fog from Time &amp; Weather Anarchy or the game's Debug Override Fog control. Native fog distance and aerosol anisotropy remain controlled by the game.
-- Saved settings are applied when the mod loads. Runtime exposure and atmosphere corrections work independently of the developer menu; exposure sampling and calibration tools are excluded from Release builds.
-- Fixed SunGlasses settings not taking effect after starting the game and loading a save.
-
-Compatibility: Lumina Custom Sun and HDRI/Cubemap overlap with SunGlasses lighting and sky controls. See Possible Incompatibilities above for recommended settings; Lumina Post Exposure can work alongside SunGlasses automatic exposure.
+- Added a Ground Fill Light slider under Sky settings (0–1, step 0.01, default 0). Adjust daytime ground tint from no fill light to the original lighting, while preserving nighttime lighting and the sunrise/sunset transition. The setting is saved and supports resetting to defaults.
+- Reduced the fog tint brightness used by Sunlight Color Correction to 60% of its previous value, preserving its hue.
   </ChangeLog>
   <ExternalLink Type="github" Url="https://github.com/Cmyna/SunGlasses" />
 </Publish>

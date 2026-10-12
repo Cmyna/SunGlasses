@@ -5,15 +5,16 @@ Lighting overrides run every frame in PreCulling, after the vanilla lighting sys
 Saved options are applied when the mod loads; missing options use the mod defaults.
 PBS ground tint fades from its original color at sun elevation <= 0 degrees to
 black at >= 5 degrees by default, independently of Color
-Correction, atmosphere overrides and the developer menu. There is no public option
-to disable it. **SunGlasses → Atmosphere → Daytime ground tint weight (0 = black, 1 = original)**
-is a session-only 0–1 debug control for the daytime endpoint. Night always retains
+Correction, atmosphere overrides and the developer menu. The saved **Ground Fill Light**
+slider under Sky settings controls the daytime endpoint from 0 (black, default) to
+1 (original), in steps of 0.01. **SunGlasses → Atmosphere → Daytime ground tint weight (0 = black, 1 = original)**
+provides a temporary debug override. Night always retains
 the original color; 0–5 degrees interpolates to the chosen daytime endpoint.
 RGB is interpolated while preserving alpha. The diagnostics row shows sun elevation,
 effective original-color weight, original and applied colors. It edits `Render Settings`' runtime Volume profile,
 not its shared asset. Scene changes recapture the source; unloading restores it unless
-another caller has since changed the parameter. Restarting/reloading the mod resets
-the debug weight to 0.
+another caller has since changed the parameter. Applying settings or restarting/reloading
+the mod restores the saved Ground Fill Light value.
 
 `SunGlassesSunSpecularLight` follows the vanilla sun's transform, native Light
 settings and HDRP settings, with diffuse, volumetric and sky interaction disabled.
@@ -88,7 +89,7 @@ dynamic exposure, independent of Debug. A global `SunGlasses Atmosphere Volume`
 at priority 1500 overrides only six selected sky, fog and cloud parameters,
 above vanilla lighting (1000) and below Photo Mode (2000).
 Defaults are aerosol density 0.024, white aerosol tint,
-saturation 0.7, horizon RGB (0.5, 0.65, 1), fixed fog RGB (0.67, 0.8075, 1),
+saturation 0.7, horizon RGB (0.5, 0.65, 1), fixed fog RGB (0.402, 0.4845, 0.6),
 and cloud layer A ambientProbeDimmer 1. Aerosol anisotropy and
 fog attenuation distance are controlled by the game / Photo Mode. Fog enable, color
 mode, height, weather and other cloud parameters remain controlled by the game.

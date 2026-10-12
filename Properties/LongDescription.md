@@ -8,6 +8,7 @@ Options to adjust sun & sky & exposure settings, includes:
 - Enable/Disbale lens flare when facing sun
 - Sky exposure
 - Daytime Ambient lighting control
+- Ground fill light (0–1)
 - Exposure curve: None, Realistic or Bright
 - Independent color correction toggle
 
@@ -31,6 +32,10 @@ This option can adjust the sky exposure. Higher value will also brighten everyth
 
 Behave likes those mods with shadow strength adjustment / ambient lighting in CS1, but only affects daytime lighting. 
 High value will make shadow lookes more blue (Because most of ambient lighting comes from sky)
+
+### Ground Fill Light
+
+Adjust daytime ground fill light from 0 (off, default) to 1 (original lighting). Nighttime ground lighting is preserved, with a smooth transition near sunrise and sunset. This option is saved in mod settings.
 
 ### Exposure Curve and Color Correction
 
