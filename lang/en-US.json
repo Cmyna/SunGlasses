@@ -20,6 +20,9 @@
 
     "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "Daytime Ambient Lighting",
     "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "Control Ambient Lighting Strength During Day",
+
+    "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.GroundFillLight]": "Ground Fill Light",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.GroundFillLight]": "Control daytime ground tint: 0 removes ground fill light, 1 retains the original. Nighttime ground lighting is preserved.",
   
     "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "Exposure Curve",
     "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "Select automatic exposure bounds: None, Realistic or Bright.",

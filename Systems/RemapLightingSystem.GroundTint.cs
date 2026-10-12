@@ -12,7 +12,7 @@ namespace SunGlasses.Systems
         private float groundTintElevation;
         private float groundTintAppliedWeight;
 
-        // Session-only debug control. No options toggle disables this correction.
+        // Options persist the daytime weight; Debug can temporarily override it.
         internal static float GroundTintWeight
         {
             get => groundTintWeight;

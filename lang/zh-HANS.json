@@ -22,6 +22,9 @@
   "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "白天环境光亮度",
   "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.IndirectDiffuseSunLighting]": "控制白天环境光强度",
 
+  "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.GroundFillLight]": "地面补光",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.GroundFillLight]": "控制白天 ground tint 补光：0 关闭地面补光，1 保留原版补光。夜间保留原版地面照明。",
+
   "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "曝光曲线",
   "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "选择动态曝光曲线：无、真实或明亮。",
 

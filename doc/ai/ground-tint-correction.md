@@ -3,16 +3,18 @@
 ## 行为
 
 SunGlasses 根据实际太阳高度，调整 `Render Settings` GO 的运行时 Volume Profile 中
-`PhysicallyBasedSky.groundTint`：太阳高度 ≤0° 保留原色，≥5° 使用黑色，
+`PhysicallyBasedSky.groundTint`：太阳高度 ≤0° 保留原色，≥5° 使用设置选择的白天权重（默认黑色），
 0–5° 在线性 RGB 上渐变。修正随 RemapLightingSystem 每帧运行，
 独立于 Color Correction、Atmosphere Overrides、曝光曲线及开发者菜单是否开启。
-正常设置页没有相关开关。
+正常设置页的“天空”分组提供“地面补光”滑块，范围 0–1，步长 0.01，默认 0。
+0 关闭白天地面补光，1 保留原版补光，中间值按比例保留原色；夜间始终保留原版地面照明。
+设置保存到模组配置，加载、应用设置及重置默认时同步到运行参数。
 
 开发者菜单 `SunGlasses → Atmosphere → Daytime ground tint weight (0 = black, 1 = original)`
 提供一个 0–1 FloatField，步长 0.01，控制 ≥5° 的白天终点。默认 0 为黑色，
 1 为绑定参数时捕获的原色；夜间终点始终为原色，0–5° 过渡到所选白天终点。
 保留原 Alpha。拒绝 NaN/Infinity，有限值限制到 0–1。
-权重只在本次运行中保留，不进入 Setting，不写存档；Mod.OnLoad 重置为 0。
+开发者菜单修改只在本次运行中保留，不写入设置；再次应用设置会恢复保存的“地面补光”值。
 
 实际原色权重为 `Lerp(1, daytimeWeight, Clamp01(elevation / 5))`。
 太阳高度使用 `Asin(Clamp(-sun.transform.forward.y, -1, 1))` 转为角度，
@@ -31,6 +33,10 @@ SunGlasses 根据实际太阳高度，调整 `Render Settings` GO 的运行时 V
 - 直接改源 PBS 参数，不另外添加全参数 Volume，不调用 Harmony。
 
 ## 证据与验证
+
+2026-10-12：地面补光接入正常设置页，补齐中英文名称与说明，默认仍为 0。
+Debug 构建及官方后处理通过，零警告、零错误；既有离线地面色调行为检查通过，
+涵盖昼夜过渡、0/0.5/1 权重、重复帧和卸载还原。本次未部署，正常设置页交互尚未在游戏内验证。
 
 2026-10-06 现场试验：修改运行时 groundTint 为黑色后，当前相机的有效值变黑、
 sky hash 从 1849955632 变成 1255825280，SH 探针明显改变，建筑阴影墙面显著变暗。

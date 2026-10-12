@@ -84,10 +84,9 @@ namespace SunGlasses
         [SettingsUISection(ksMain, kgSky)]
         public float IndirectDiffuseSunLighting { get; set; }
 
-        /*
-        [SettingsUISlider(min = 0, max = 15, step = 0.05f, scalarMultiplier = 1, unit = Unit.kFloatTwoFractions)]
-        [SettingsUISection(ksMain, kgMain)]
-        public float GroundDiffuseLight { get; set; }*/
+        [SettingsUISlider(min = 0, max = 1, step = 0.01f, scalarMultiplier = 1, unit = Unit.kFloatTwoFractions)]
+        [SettingsUISection(ksMain, kgSky)]
+        public float GroundFillLight { get; set; }
 
 
         [SettingsUISection(ksMain, kgExposure)]
@@ -146,6 +145,7 @@ namespace SunGlasses
             ExposureCurve = ExposureCurvePreset.Realistic;
             ColorCorrection = true;
             IndirectDiffuseSunLighting = RemapLightingSystem.VanillaIndirectDiffuseLighting;
+            GroundFillLight = 0f;
             LensFlare = true;
             RemapLightingSystem.InternalVolumePriority = 2500;
         }
@@ -159,6 +159,7 @@ namespace SunGlasses
                 : RemapLightingSystem.OriginalSunTintPreset;
             RemapLightingSystem.EnableLensFlare = LensFlare;
             RemapLightingSystem.IndirectLightingMultipilier = IndirectDiffuseSunLighting;
+            RemapLightingSystem.GroundTintWeight = GroundFillLight;
             RemapLightingSystem.InternalVolumePriority = 2500;
             RemapLightingSystem.SkyExposure = SkyExposure;
             RemapLightingSystem.SunBloomMultiplier = SunBloom;
@@ -202,8 +203,8 @@ namespace SunGlasses
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.IndirectDiffuseSunLighting)), "Indirect Lighting" },
 
-                //{ m_Setting.GetOptionLabelLocaleID(nameof(Setting.GroundDiffuseLight) ), "Ground Diffuse Light Strength" },
-                //{ m_Setting.GetOptionDescLocaleID(nameof(Setting.GroundDiffuseLight) ), "Ground Diffuse Light Strength" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(Setting.GroundFillLight)), "Ground Fill Light" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.GroundFillLight)), "Control daytime ground tint: 0 removes ground fill light, 1 retains the original. Nighttime ground lighting is preserved." },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ExposureCurve)), "Exposure Curve" },
                 { m_Setting.GetOptionDescLocaleID(nameof(Setting.ExposureCurve)), "Select automatic exposure bounds: None, Realistic or Bright." },
