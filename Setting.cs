@@ -207,15 +207,15 @@ namespace SunGlasses
                 { m_Setting.GetOptionDescLocaleID(nameof(Setting.GroundFillLight)), "Control daytime ground tint: 0 removes ground fill light, 1 retains the original. Nighttime ground lighting is preserved." },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ExposureCurve)), "Exposure Curve" },
-                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ExposureCurve)), "Select automatic exposure bounds: None, Realistic or Bright." },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ExposureCurve)), "Select automatic exposure bounds: Vanilla, Realistic or Bright." },
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ColorCorrection)), "Sunlight Color Correction" },
                 { m_Setting.GetOptionDescLocaleID(nameof(Setting.ColorCorrection)), "Correct the severe yellow color cast in vanilla lighting." },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ResetModSettings)), "Reset To Default" },
-                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ResetModSettings)), "Reset to defaults (None exposure curve, Color Correction disabled, Ground Fill Light 1)" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ResetModSettings)), "Reset to defaults (Vanilla exposure curve, Color Correction disabled, Ground Fill Light 1)" },
                 { m_Setting.GetOptionWarningLocaleID(nameof(Setting.ResetModSettings)), "Are you sure setting everything to default?" },
 
-                { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.None), "None" },
+                { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.None), "Vanilla" },
                 { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.Realistic), "Realistic" },
                 { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.Bright), "Bright" },
             };

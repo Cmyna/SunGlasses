@@ -59,10 +59,10 @@ HDRP Volume at priority 1500 overrides only automatic exposure bounds, above
 vanilla lighting (1000) and below Photo Mode (2000). It keeps
 working when the developer menu is closed or the exposure Debug system is disabled.
 
-The mod options provide an **Exposure Curve** dropdown: **None** (default), **Realistic**,
-or **Bright**. **None** disables the exposure override. The independent
+The mod options provide an **Exposure Curve** dropdown: **Vanilla** (default), **Realistic**,
+or **Bright**. **Vanilla** uses the game's exposure bounds. The independent
 **Color Correction** checkbox (disabled by default) controls atmosphere overrides.
-Reset To Default selects None, disables Color Correction, and sets Ground Fill Light to 1.
+Reset To Default selects Vanilla, disables Color Correction, and sets Ground Fill Light to 1.
 Both options are saved and applied at mod load and when changed. Applying options
 clears manual exposure preview and restores the selected preset; Debug curve
 changes remain temporary. The old dark-area histogram adjustment has been removed.

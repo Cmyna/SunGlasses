@@ -26,9 +26,9 @@
   "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.GroundFillLight]": "控制白天 ground tint 补光：0 关闭地面补光，1 保留原版补光。夜间保留原版地面照明。",
 
   "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "曝光曲线",
-  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "选择动态曝光曲线：无、真实或明亮。",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "选择曝光曲线：原版、真实或明亮。",
 
-  "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[None]": "无",
+  "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[None]": "原版",
   "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Realistic]": "真实",
   "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Bright]": "明亮",
 
@@ -37,6 +37,6 @@
 
   
   "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认",
-  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认（曝光曲线：无、关闭颜色校正、地面补光：1）",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认（曝光曲线：原版、关闭颜色校正、地面补光：1）",
   "Options.WARNING[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "所有设置将重置为默认?"
 }

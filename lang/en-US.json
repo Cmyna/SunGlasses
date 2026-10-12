@@ -25,9 +25,9 @@
     "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.GroundFillLight]": "Control daytime ground tint: 0 removes ground fill light, 1 retains the original. Nighttime ground lighting is preserved.",
   
     "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "Exposure Curve",
-    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "Select automatic exposure bounds: None, Realistic or Bright.",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ExposureCurve]": "Select automatic exposure bounds: Vanilla, Realistic or Bright.",
 
-    "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[None]": "None",
+    "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[None]": "Vanilla",
     "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Realistic]": "Realistic",
     "Options.SunGlasses.SunGlasses.Mod.EXPOSURECURVEPRESET[Bright]": "Bright",
 
@@ -35,7 +35,7 @@
     "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ColorCorrection]": "Correct the severe yellow color cast in vanilla lighting.",
 
     "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset Default",
-    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset to defaults (None exposure curve, Color Correction disabled, Ground Fill Light 1)",
+    "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Reset to defaults (Vanilla exposure curve, Color Correction disabled, Ground Fill Light 1)",
     "Options.WARNING[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "Are you sure setting everything to default?"
 
 
