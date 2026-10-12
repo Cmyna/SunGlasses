@@ -2,7 +2,7 @@
 
 ## Feature boundaries
 
-Atmosphere overrides are a production runtime feature managed by `AtmosphereSystem : GameSystemBase`, independent of the developer menu and custom MonoBehaviours. The system starts enabled with a fixed default configuration. This stage does not extend Setting, add configuration files, or write parameters to city saves.
+Atmosphere overrides are a production runtime feature managed by `AtmosphereSystem : GameSystemBase`, independent of the developer menu and custom MonoBehaviours. The saved Color Correction setting controls overrides and defaults to disabled. Numeric atmosphere parameters use a fixed default configuration and are not written to city saves.
 
 `AtmosphereParameters` is the single source of numeric configuration, used for both initialization and scene resource recreation. The system exposes TrySetParameters to accept a validated configuration copy, providing an entry point for a future settings page. The Debug Atmosphere section retains the Enable atmosphere overrides checkbox, which directly reads and writes the system's OverridesEnabled property. Debug 还提供地平线色调按太阳高度混合的开关和变白阈值；这些配置仅在当前会话有效，不写入 Setting 或城市存档。其余字段为只读诊断。
 
@@ -17,7 +17,7 @@ The defaults now match the values displayed by the old Debug input fields, corre
 | PhysicallyBasedSky.aerosolTint | RGB (1, 1, 1) |
 | PhysicallyBasedSky.colorSaturation | 0.7 |
 | PhysicallyBasedSky.horizonTint | 基础 RGB (0.5, 0.65, 1)，默认随太阳高度渐变到白色 |
-| Fog.tint | 全天固定 RGB (0.402, 0.4845, 0.6)，原始色调亮度的 0.6 倍 |
+| Fog.tint | 全天固定 RGB (0.67, 0.8075, 1) |
 | Fog.meanFreePath | 不覆盖，由游戏 / Photo Mode 控制 |
 | CloudLayer.layerA.ambientProbeDimmer | 1 |
 
@@ -27,9 +27,9 @@ The global Volume is named SunGlasses Atmosphere Volume, with weight 1 and prior
 
 地平线色调默认启用按太阳高度渐变，变白阈值为 20°，与太阳光 tint 的阈值独立。太阳高度来自实际太阳 Transform 的方向；0° 时使用基础色调，0° 到阈值之间线性混合到白色，达到或超过阈值后保持白色，地平线以下保持基础色调。关闭混合后所有角度都使用基础色调。该逻辑在 Debug 面板关闭时仍每帧执行。
 
-雾色全天固定为 RGB (0.402,0.4845,0.6)，原始 RGB (0.67,0.8075,1) 取自 `PhotoModeRenderSystem.m_Fog.tint.value`，
+雾色全天固定为 RGB (0.67,0.8075,1)，取自 `PhotoModeRenderSystem.m_Fog.tint.value`，
 不是从已混合的相机 VolumeStack 推断；当时 Photo Mode 启用、CinematicControlVolume 优先级 2000。
-2026-10-12 按用户要求将原始色调 RGB 统一乘以 0.6，保留色相和 Alpha 1。
+2026-10-12 按用户反馈撤销亮度乘以 0.6 的调整，恢复原始色调，Alpha 保持 1。
 这是一份固定默认色，不会在后续运行中自动跟随 Photo Mode 编辑，也不受太阳高度影响。
 雾色角度插值、其调试控件和对应验证脚本已移除。雾距和气溶胶各向异性配置字段均已移除，
 AtmosphereSystem 不再读取或写入 meanFreePath、aerosolAnisotropy。
@@ -46,7 +46,7 @@ Each frame checks scene state, the sun Transform, and the original lighting Volu
 
 City preload suspends overrides and releases resources; loading completion permits recreation. System stop, mod disposal, and system destruction also release the Volume, Profile, and Profile components. If the scene destroys the host object itself, the system cleans up the old Profile before recreating resources. The game World can survive across cities, so resource cleanup does not depend on World destruction.
 
-OverridesEnabled controls atmosphere overrides themselves; the system's Enabled property controls updates and resource lifecycle. 设置中的独立“颜色校正”勾选项默认开启，保存到模组设置，并在加载及应用设置时恢复。开启时启用大气覆盖，同时选择 Gentle warmth 太阳色调预设（RGB 0.76、0.85、1）；关闭时禁用大气覆盖，同时选择 Original / no tint 预设（白色）。原 Previous gentle warmth 预设更名为 Gentle warmth。现有按太阳高度向白色渐变的规则保持有效。选择曝光曲线“无”不会关闭颜色校正。Debug 对开关或色调的临时修改不写入保存设置，应用设置会恢复对应的预设。Disabling atmosphere overrides directly in Debug does not affect dynamic exposure or sun lighting. Re-enabling the system recreates resources using the retained configuration; restarting restores atmosphere parameters to defaults and loads the saved Color Correction switch.
+OverridesEnabled controls atmosphere overrides themselves; the system's Enabled property controls updates and resource lifecycle. 设置中的独立“颜色校正”勾选项默认关闭，保存到模组设置，并在加载及应用设置时恢复。开启时启用大气覆盖，同时选择 Gentle warmth 太阳色调预设（RGB 0.76、0.85、1）；关闭时禁用大气覆盖，同时选择 Original / no tint 预设（白色）。原 Previous gentle warmth 预设更名为 Gentle warmth。现有按太阳高度向白色渐变的规则保持有效。选择曝光曲线“无”不会关闭颜色校正。Debug 对开关或色调的临时修改不写入保存设置，应用设置会恢复对应的预设。Disabling atmosphere overrides directly in Debug does not affect dynamic exposure or sun lighting. Re-enabling the system recreates resources using the retained configuration; restarting restores atmosphere parameters to defaults and loads the saved Color Correction switch.
 
 ## Debug diagnostics
 
@@ -60,6 +60,10 @@ Effective camera fog / clouds 仅展示游戏实际雾距。
 Atmosphere camera check compares the actively controlled parameters in the main camera's HDRP stack against the configuration. 自定义雾接管时跳过雾色比较，显示 Applied to main camera; fog delegated to custom fog，同时提供 Fog overrides suspended for custom fog 状态。It displays Applied to main camera when all controlled parameters match, Off when the system or overrides are disabled, Waiting when resources are not ready, and Mismatch for competing Volumes or camera-layer mismatches. Color checks compare RGB, and scalar checks use small absolute/relative error tolerances.
 
 ## Implementation alignment and verification
+
+2026-10-12 后续反馈：恢复默认雾色 RGB (0.67,0.8075,1)，保留地面补光设置。
+Release 构建及官方后处理通过，零警告、零错误；已部署到本地 Mods，DLL 哈希一致。
+本次未发布，游戏内画面尚未验证。
 
 2026-10-12：颜色校正的默认雾色亮度降至原来的 0.6 倍。
 Debug 构建及官方后处理通过，零警告、零错误；本次未部署，最终画面尚未在游戏内验证。

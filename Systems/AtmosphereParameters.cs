@@ -22,8 +22,8 @@ namespace SunGlasses.Systems
             HorizonTint = new Color(0.5f, 0.65f, 1f, 1f),
             HorizonTintBlendByElevation = true,
             HorizonTintWhiteAngle = 20f,
-            // Photo Mode tint captured on 2026-10-06, with RGB brightness reduced to 60%.
-            FogTint = new Color(0.67f * 0.6f, 0.8075f * 0.6f, 0.6f, 1f),
+            // Captured from the user's Photo Mode fog tint on 2026-10-06.
+            FogTint = new Color(0.67f, 0.8075f, 1f, 1f),
             CloudAmbientDimmer = 1f
         };
 

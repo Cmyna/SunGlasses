@@ -2,9 +2,9 @@
 
 ## Runtime and Debug boundaries
 
-Dynamic exposure uses the built-in `realistic` curve by default. Each rendered frame calculates automatic exposure bounds from the sun angle, independently of whether the developer menu is open or the Debug system is enabled.
+Dynamic exposure defaults to None (no override). When a built-in curve is selected, each rendered frame calculates automatic exposure bounds from the sun angle, independently of whether the developer menu is open or the Debug system is enabled.
 
-设置中的“曝光曲线”下拉框提供“无、真实、明亮”，默认“真实”。“无”关闭动态曝光覆盖；其余选项应用对应的内置曲线。应用设置会清除手动曝光预览。独立的“颜色校正”勾选项默认开启，不受曝光曲线选择影响：开启时启用大气覆盖并选择 Gentle warmth 太阳色调；关闭时禁用大气覆盖并选择 Original / no tint。两个选项保存到模组设置并在加载时应用。旧的暗部增亮设置及其曝光模式、直方图百分位修改已移除。
+设置中的“曝光曲线”下拉框提供“无、真实、明亮”，默认“无”。“无”关闭动态曝光覆盖；其余选项应用对应的内置曲线。应用设置会清除手动曝光预览。独立的“颜色校正”勾选项默认关闭，不受曝光曲线选择影响：开启时启用大气覆盖并选择 Gentle warmth 太阳色调；关闭时禁用大气覆盖并选择 Original / no tint。两个选项保存到模组设置并在加载时应用。重置默认值会选择“无”、关闭颜色校正，并将地面补光设为 1。旧的暗部增亮设置及其曝光模式、直方图百分位修改已移除。
 
 | Module | Responsibility |
 | --- | --- |

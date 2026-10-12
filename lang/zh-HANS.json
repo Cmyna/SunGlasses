@@ -37,6 +37,6 @@
 
   
   "Options.OPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认",
-  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认（真实曝光曲线、启用颜色校正）",
+  "Options.OPTION_DESCRIPTION[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "重置为默认（曝光曲线：无、关闭颜色校正、地面补光：1）",
   "Options.WARNING[SunGlasses.SunGlasses.Mod.Setting.ResetModSettings]": "所有设置将重置为默认?"
 }

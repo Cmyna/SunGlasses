@@ -142,10 +142,10 @@ namespace SunGlasses
             SkyExposure = RemapLightingSystem.VanillaSkyExposure;
             SunSize = DefaultMultiplier;
             SunBloom = DefaultMultiplier;
-            ExposureCurve = ExposureCurvePreset.Realistic;
-            ColorCorrection = true;
+            ExposureCurve = ExposureCurvePreset.None;
+            ColorCorrection = false;
             IndirectDiffuseSunLighting = RemapLightingSystem.VanillaIndirectDiffuseLighting;
-            GroundFillLight = 0f;
+            GroundFillLight = 1f;
             LensFlare = true;
             RemapLightingSystem.InternalVolumePriority = 2500;
         }
@@ -212,6 +212,7 @@ namespace SunGlasses
                 { m_Setting.GetOptionDescLocaleID(nameof(Setting.ColorCorrection)), "Correct the severe yellow color cast in vanilla lighting." },
 
                 { m_Setting.GetOptionLabelLocaleID(nameof(Setting.ResetModSettings)), "Reset To Default" },
+                { m_Setting.GetOptionDescLocaleID(nameof(Setting.ResetModSettings)), "Reset to defaults (None exposure curve, Color Correction disabled, Ground Fill Light 1)" },
                 { m_Setting.GetOptionWarningLocaleID(nameof(Setting.ResetModSettings)), "Are you sure setting everything to default?" },
 
                 { m_Setting.GetEnumValueLocaleID(Setting.ExposureCurvePreset.None), "None" },

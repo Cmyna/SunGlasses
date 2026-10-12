@@ -4,10 +4,10 @@
 Lighting overrides run every frame in PreCulling, after the vanilla lighting system.
 Saved options are applied when the mod loads; missing options use the mod defaults.
 PBS ground tint fades from its original color at sun elevation <= 0 degrees to
-black at >= 5 degrees by default, independently of Color
+the selected daytime weight at >= 5 degrees, independently of Color
 Correction, atmosphere overrides and the developer menu. The saved **Ground Fill Light**
-slider under Sky settings controls the daytime endpoint from 0 (black, default) to
-1 (original), in steps of 0.01. **SunGlasses → Atmosphere → Daytime ground tint weight (0 = black, 1 = original)**
+slider under Sky settings controls the daytime endpoint from 0 (black) to
+1 (original, default), in steps of 0.01. **SunGlasses → Atmosphere → Daytime ground tint weight (0 = black, 1 = original)**
 provides a temporary debug override. Night always retains
 the original color; 0–5 degrees interpolates to the chosen daytime endpoint.
 RGB is interpolated while preserving alpha. The diagnostics row shows sun elevation,
@@ -30,7 +30,7 @@ and is not saved to the mod settings.
 **SunGlasses Sun → Sun tint preset** cycles through six
 presets: original white (1, 1, 1), mild correction (0.78, 0.88, 1), neutral
 correction (0.70, 0.83, 1), cool correction (0.65, 0.80, 1), Gentle warmth
-(0.76, 0.85, 1; default), and golden red (1, 0.86, 0.72).
+(0.76, 0.85, 1; selected when Color Correction is enabled), and golden red (1, 0.86, 0.72).
 **Selected sun tint** identifies the selected preset.
 **Blend sun tint by elevation** is enabled by default. It uses the actual sun
 direction to blend from the selected preset at 0 degrees to white at
@@ -54,14 +54,15 @@ output. Invalid input keeps the last valid value. This control is session-only;
 unloading restores the unscaled intensity unless another caller changed it.
 
 Dynamic exposure runs as a game DOTS managed system in PreCulling after
-RemapLightingSystem, using the bundled realistic curve by default. One global
+RemapLightingSystem when a bundled exposure curve is selected. One global
 HDRP Volume at priority 1500 overrides only automatic exposure bounds, above
 vanilla lighting (1000) and below Photo Mode (2000). It keeps
 working when the developer menu is closed or the exposure Debug system is disabled.
 
-The mod options provide an **Exposure Curve** dropdown: **None**, **Realistic**
-(default), or **Bright**. **None** disables the exposure override. The independent
-**Color Correction** checkbox (enabled by default) controls atmosphere overrides.
+The mod options provide an **Exposure Curve** dropdown: **None** (default), **Realistic**,
+or **Bright**. **None** disables the exposure override. The independent
+**Color Correction** checkbox (disabled by default) controls atmosphere overrides.
+Reset To Default selects None, disables Color Correction, and sets Ground Fill Light to 1.
 Both options are saved and applied at mod load and when changed. Applying options
 clears manual exposure preview and restores the selected preset; Debug curve
 changes remain temporary. The old dark-area histogram adjustment has been removed.
@@ -89,7 +90,7 @@ dynamic exposure, independent of Debug. A global `SunGlasses Atmosphere Volume`
 at priority 1500 overrides only six selected sky, fog and cloud parameters,
 above vanilla lighting (1000) and below Photo Mode (2000).
 Defaults are aerosol density 0.024, white aerosol tint,
-saturation 0.7, horizon RGB (0.5, 0.65, 1), fixed fog RGB (0.402, 0.4845, 0.6),
+saturation 0.7, horizon RGB (0.5, 0.65, 1), fixed fog RGB (0.67, 0.8075, 1),
 and cloud layer A ambientProbeDimmer 1. Aerosol anisotropy and
 fog attenuation distance are controlled by the game / Photo Mode. Fog enable, color
 mode, height, weather and other cloud parameters remain controlled by the game.
