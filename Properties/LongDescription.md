@@ -9,7 +9,7 @@ Options to adjust sun & sky & exposure settings, includes:
 - Sky exposure
 - Daytime Ambient lighting control
 - Ground fill light (0–1)
-- Exposure curve: None, Realistic or Bright
+- Exposure curve: Vanilla, Realistic or Bright
 - Independent color correction toggle
 
 ### Sun disk size
@@ -35,11 +35,11 @@ High value will make shadow lookes more blue (Because most of ambient lighting c
 
 ### Ground Fill Light
 
-Adjust daytime ground fill light from 0 (off, default) to 1 (original lighting). Nighttime ground lighting is preserved, with a smooth transition near sunrise and sunset. This option is saved in mod settings.
+Adjust daytime ground fill light from 0 (off) to 1 (original lighting, default). Nighttime ground lighting is preserved, with a smooth transition near sunrise and sunset. This option is saved in mod settings.
 
 ### Exposure Curve and Color Correction
 
-Choose None to use the game's exposure bounds, or Realistic (default) / Bright to apply a dynamic exposure curve. Color Correction independently enables atmosphere adjustments and is enabled by default. Both choices are saved in mod settings.
+Choose Vanilla (default) to use the game's exposure bounds, or Realistic / Bright to apply a dynamic exposure curve. Color Correction independently enables atmosphere adjustments and is disabled by default. Both choices are saved in mod settings. Reset To Default selects Vanilla, disables Color Correction, and sets Ground Fill Light to 1. Existing saved settings are retained until you reset or change them.
 
 ### Possible Incompatibilities
 
@@ -47,8 +47,8 @@ Lumina: partial compatibility, based on a source-code review of Lumina main (com
 
 - Custom Sun: both mods control sun disk size and flare size; SunGlasses reapplies these settings every frame. Disable Lumina Custom Sun and avoid its sun sliders when using SunGlasses.
 - HDRI/Cubemap: Lumina replaces the physically based sky that SunGlasses sky exposure, sky color correction, and ground tint adjustments rely on. Disable HDRI/Cubemap to retain the full SunGlasses sky corrections. This does not imply that fog, exposure, or sun controls stop working.
-- Exposure and grading: SunGlasses automatic exposure bounds and Lumina Post Exposure affect different parameters and can work together. LUTs, white balance, and other grading also combine with SunGlasses corrections; adjust them together if the result is too bright or has an unwanted color cast. Exposure Curve: None disables SunGlasses automatic exposure if preferred.
-- Disabling SunGlasses Color Correction or choosing Exposure Curve: None does not hand all lighting control to Lumina. Sun disk size, ground tint correction, and reduced sunlight specular highlights remain active.
+- Exposure and grading: SunGlasses automatic exposure bounds and Lumina Post Exposure affect different parameters and can work together. LUTs, white balance, and other grading also combine with SunGlasses corrections; adjust them together if the result is too bright or has an unwanted color cast. Exposure Curve: Vanilla disables SunGlasses automatic exposure if preferred.
+- Disabling SunGlasses Color Correction or choosing Exposure Curve: Vanilla does not hand all lighting control to Lumina. Sun disk size, ground tint correction, and reduced sunlight specular highlights remain active.
 
 For SunGlasses Debug builds, avoid using exposure calibration time controls together with Lumina time controls. The calibration code is excluded from Release builds.
 

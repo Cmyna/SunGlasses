@@ -1,4 +1,4 @@
-﻿<Publish>
+<Publish>
 	<!--Id must be set in order to update existed mod. it is not required for publishing mod for the first time-->
 	<ModId Value="76849" />
 	<!--Name of the mod to display to players-->
@@ -18,7 +18,7 @@ Options to adjust sun &amp; sky &amp; exposure settings, includes:
 - Sky exposure
 - Daytime Ambient lighting control
 - Ground fill light (0–1)
-- Exposure curve: None, Realistic or Bright
+- Exposure curve: Vanilla, Realistic or Bright
 - Independent color correction toggle
 
 ## Sun disk size
@@ -44,11 +44,11 @@ High value will make shadow lookes more blue (Because most of ambient lighting c
 
 ## Ground Fill Light
 
-Adjust daytime ground fill light from 0 (off, default) to 1 (original lighting). Nighttime ground lighting is preserved, with a smooth transition near sunrise and sunset. This option is saved in mod settings.
+Adjust daytime ground fill light from 0 (off) to 1 (original lighting, default). Nighttime ground lighting is preserved, with a smooth transition near sunrise and sunset. This option is saved in mod settings.
 
 ## Exposure Curve and Color Correction
 
-Choose None to use the game's exposure bounds, or Realistic (default) / Bright to apply a dynamic exposure curve. Color Correction independently enables atmosphere adjustments and is enabled by default. Both choices are saved in mod settings.
+Choose Vanilla (default) to use the game's exposure bounds, or Realistic / Bright to apply a dynamic exposure curve. Color Correction independently enables atmosphere adjustments and is disabled by default. Both choices are saved in mod settings. Reset To Default selects Vanilla, disables Color Correction, and sets Ground Fill Light to 1. Existing saved settings are retained until you reset or change them.
 
 # Possible Incompatibilities
 
@@ -56,8 +56,8 @@ Lumina: partial compatibility, based on a source-code review of Lumina main (com
 
 - Custom Sun: both mods control sun disk size and flare size; SunGlasses reapplies these settings every frame. Disable Lumina Custom Sun and avoid its sun sliders when using SunGlasses.
 - HDRI/Cubemap: Lumina replaces the physically based sky that SunGlasses sky exposure, sky color correction, and ground tint adjustments rely on. Disable HDRI/Cubemap to retain the full SunGlasses sky corrections. This does not imply that fog, exposure, or sun controls stop working.
-- Exposure and grading: SunGlasses automatic exposure bounds and Lumina Post Exposure affect different parameters and can work together. LUTs, white balance, and other grading also combine with SunGlasses corrections; adjust them together if the result is too bright or has an unwanted color cast. Exposure Curve: None disables SunGlasses automatic exposure if preferred.
-- Disabling SunGlasses Color Correction or choosing Exposure Curve: None does not hand all lighting control to Lumina. Sun disk size, ground tint correction, and reduced sunlight specular highlights remain active.
+- Exposure and grading: SunGlasses automatic exposure bounds and Lumina Post Exposure affect different parameters and can work together. LUTs, white balance, and other grading also combine with SunGlasses corrections; adjust them together if the result is too bright or has an unwanted color cast. Exposure Curve: Vanilla disables SunGlasses automatic exposure if preferred.
+- Disabling SunGlasses Color Correction or choosing Exposure Curve: Vanilla does not hand all lighting control to Lumina. Sun disk size, ground tint correction, and reduced sunlight specular highlights remain active.
 
 ## NOTES
 
@@ -72,15 +72,16 @@ All cloud settings, including distant clouds and volumetric clouds, can substant
   <Screenshot Value="Properties/Screenshots/HUGE_SUN.png" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/sunglasses.1651414/" />
-	<ModVersion Value="2.1" />
+	<ModVersion Value="2.2" />
 	<GameVersion Value="1.*" />
   <!-- I18n every where -->
 	<Dependency Id="75426" />
   <ChangeLog>
-## SunGlasses 2.1
+## SunGlasses 2.2
 
-- Added a Ground Fill Light slider under Sky settings (0–1, step 0.01, default 0). Adjust daytime ground tint from no fill light to the original lighting, while preserving nighttime lighting and the sunrise/sunset transition. The setting is saved and supports resetting to defaults.
-- Reduced the fog tint brightness used by Sunlight Color Correction to 60% of its previous value, preserving its hue.
+- Restored the original fog tint used by Sunlight Color Correction (RGB 0.67, 0.8075, 1), undoing the brightness reduction in 2.1.
+- Updated default and reset settings: Color Correction off, Vanilla exposure curve, and Ground Fill Light 1. Existing saved settings are retained until you reset or change them.
+- Renamed the None exposure option to Vanilla (原版 in Chinese). Its behavior remains unchanged: use the game's original exposure bounds.
   </ChangeLog>
   <ExternalLink Type="github" Url="https://github.com/Cmyna/SunGlasses" />
 </Publish>
