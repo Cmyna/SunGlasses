@@ -6,7 +6,7 @@ namespace SunGlasses.Systems
     public partial class RemapLightingSystem
     {
         public const string SunSpecularLightName = "SunGlassesSunSpecularLight";
-        internal static bool EnableSunSpecularLight = true;
+        internal static bool EnableSunSpecularLight = false;
 
         // A session-only debug override; independent of the vanilla sun's dimmer.
         internal const float DefaultSunSpecularLightDimmer = 0.01f;

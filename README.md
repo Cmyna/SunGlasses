@@ -23,7 +23,7 @@ own cascaded shadows, so the vanilla sun retains them.
 The vanilla sun keeps its other settings and has only `affectSpecular` disabled.
 The extra light is removed and the original specular flag restored when the mod unloads.
 
-**SunGlasses Sun → Enable independent specular sun** is enabled by default.
+**SunGlasses Sun → Enable independent specular sun** is disabled by default.
 Turning it off disables the extra light and enables the vanilla sun's `affectSpecular`;
 turning it on resumes the extra light and disables the vanilla sun's `affectSpecular`.
 The switch takes effect on the next lighting update, remains active with the developer
