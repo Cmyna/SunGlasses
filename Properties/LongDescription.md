@@ -48,7 +48,7 @@ Lumina: partial compatibility, based on a source-code review of Lumina main (com
 - Custom Sun: both mods control sun disk size and flare size; SunGlasses reapplies these settings every frame. Disable Lumina Custom Sun and avoid its sun sliders when using SunGlasses.
 - HDRI/Cubemap: Lumina replaces the physically based sky that SunGlasses sky exposure, sky color correction, and ground tint adjustments rely on. Disable HDRI/Cubemap to retain the full SunGlasses sky corrections. This does not imply that fog, exposure, or sun controls stop working.
 - Exposure and grading: SunGlasses automatic exposure bounds and Lumina Post Exposure affect different parameters and can work together. LUTs, white balance, and other grading also combine with SunGlasses corrections; adjust them together if the result is too bright or has an unwanted color cast. Exposure Curve: Vanilla disables SunGlasses automatic exposure if preferred.
-- Disabling SunGlasses Color Correction or choosing Exposure Curve: Vanilla does not hand all lighting control to Lumina. Sun disk size, ground tint correction, and reduced sunlight specular highlights remain active.
+- Disabling SunGlasses Color Correction or choosing Exposure Curve: Vanilla does not hand all lighting control to Lumina. Sun disk size and ground tint correction remain active. Sunlight specular highlights use the vanilla effect.
 
 For SunGlasses Debug builds, avoid using exposure calibration time controls together with Lumina time controls. The calibration code is excluded from Release builds.
 
