@@ -72,16 +72,15 @@ All cloud settings, including distant clouds and volumetric clouds, can substant
   <Screenshot Value="Properties/Screenshots/HUGE_SUN.png" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/sunglasses.1651414/" />
-	<ModVersion Value="2.2" />
+	<ModVersion Value="2.3" />
 	<GameVersion Value="1.*" />
   <!-- I18n every where -->
 	<Dependency Id="75426" />
   <ChangeLog>
-## SunGlasses 2.2
+## SunGlasses 2.3
 
-- Restored the original fog tint used by Sunlight Color Correction (RGB 0.67, 0.8075, 1), undoing the brightness reduction in 2.1.
-- Updated default and reset settings: Color Correction off, Vanilla exposure curve, and Ground Fill Light 1. Existing saved settings are retained until you reset or change them.
-- Renamed the None exposure option to Vanilla (原版 in Chinese). Its behavior remains unchanged: use the game's original exposure bounds.
+- Fixed overly dark metallic surfaces around noon by increasing sunlight specular strength as the sun rises. The specular dimmer stays at 0.01 up to 20 degrees of sun elevation, then increases smoothly to 0.35 at 90 degrees.
+- Added a developer-menu toggle to switch between the independent specular sun and the original sun's specular lighting for comparison.
   </ChangeLog>
   <ExternalLink Type="github" Url="https://github.com/Cmyna/SunGlasses" />
 </Publish>
