@@ -23,9 +23,18 @@ own cascaded shadows, so the vanilla sun retains them.
 The vanilla sun keeps its other settings and has only `affectSpecular` disabled.
 The extra light is removed and the original specular flag restored when the mod unloads.
 
+**SunGlasses Sun → Enable independent specular sun** is enabled by default.
+Turning it off disables the extra light and enables the vanilla sun's `affectSpecular`;
+turning it on resumes the extra light and disables the vanilla sun's `affectSpecular`.
+The switch takes effect on the next lighting update, remains active with the developer
+menu closed, and is session-only. Unloading still restores the captured original flag.
+
 In the developer menu, **SunGlasses Sun → Specular sun lightDimmer** controls the
-extra light's dimmer from 0 to 1 (default 0.01). This debug value lasts for the session
-and is not saved to the mod settings.
+extra light's dimmer at sun elevations of 20 degrees or lower, from 0 to 1 (default 0.01).
+From 20 to 90 degrees, the dimmer interpolates linearly to **Specular sun lightDimmer at 90 degrees**
+(default 0.35). **Active specular sun lightDimmer** shows the resulting value.
+Both endpoints have reset buttons. These debug values last for the session
+and are not saved to the mod settings.
 
 **SunGlasses Sun → Sun tint preset** cycles through six
 presets: original white (1, 1, 1), mild correction (0.78, 0.88, 1), neutral

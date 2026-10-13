@@ -6,10 +6,14 @@ namespace SunGlasses.Systems
     public partial class RemapLightingSystem
     {
         public const string SunSpecularLightName = "SunGlassesSunSpecularLight";
+        internal static bool EnableSunSpecularLight = true;
 
         // A session-only debug override; independent of the vanilla sun's dimmer.
         internal const float DefaultSunSpecularLightDimmer = 0.01f;
         internal static float SunSpecularLightDimmer = DefaultSunSpecularLightDimmer;
+        internal const float DefaultSunSpecularZenithDimmer = 0.35f;
+        internal static float SunSpecularZenithDimmer = DefaultSunSpecularZenithDimmer;
+        internal static float ActiveSunSpecularLightDimmer = DefaultSunSpecularLightDimmer;
 
         private GameObject sunSpecularObject;
         private Light sunSpecularLight;
@@ -24,6 +28,7 @@ namespace SunGlasses.Systems
             {
                 // Do not leave the last scene's specular light shining during a load.
                 if (sunSpecularLight != null) sunSpecularLight.enabled = false;
+                ActiveSunSpecularLightDimmer = 0f;
                 return;
             }
 
@@ -33,6 +38,14 @@ namespace SunGlasses.Systems
                 RestoreSunSpecular();
                 originalSunData = sourceData;
                 originalSunAffectSpecular = sourceData.affectSpecular;
+            }
+
+            if (!EnableSunSpecularLight)
+            {
+                if (sunSpecularLight != null) sunSpecularLight.enabled = false;
+                ActiveSunSpecularLightDimmer = 0f;
+                sourceData.affectSpecular = true;
+                return;
             }
 
             if (sunSpecularObject == null)
@@ -65,7 +78,11 @@ namespace SunGlasses.Systems
             sunSpecularData.affectSpecular = true;
             sunSpecularData.affectsVolumetric = false;
             sunSpecularData.interactsWithSky = false;
-            sunSpecularData.lightDimmer = SunSpecularLightDimmer;
+            // Directional light forward points toward the ground; negate Y for elevation.
+            var elevation = Mathf.Asin(Mathf.Clamp(-sun.transform.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+            var elevationWeight = Mathf.InverseLerp(20f, 90f, elevation);
+            ActiveSunSpecularLightDimmer = Mathf.Lerp(SunSpecularLightDimmer, SunSpecularZenithDimmer, elevationWeight);
+            sunSpecularData.lightDimmer = ActiveSunSpecularLightDimmer;
             sunSpecularData.enabled = sourceData.enabled;
             sunSpecularLight.enabled = sourceLight.enabled && sourceLight.gameObject.activeInHierarchy;
             sourceData.affectSpecular = false;

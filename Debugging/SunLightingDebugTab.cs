@@ -61,6 +61,12 @@ namespace SunGlasses.Debugging
                         RemapLightingSystem.ActiveSunTint.r, RemapLightingSystem.ActiveSunTint.g,
                         RemapLightingSystem.ActiveSunTint.b)
                 },
+                new DebugUI.BoolField
+                {
+                    displayName = "Enable independent specular sun",
+                    getter = () => RemapLightingSystem.EnableSunSpecularLight,
+                    setter = value => RemapLightingSystem.EnableSunSpecularLight = value
+                },
                 new DebugUI.FloatField
                 {
                     displayName = "Specular sun lightDimmer",
@@ -78,6 +84,29 @@ namespace SunGlasses.Debugging
                 {
                     displayName = "Reset specular sun lightDimmer",
                     action = () => RemapLightingSystem.SunSpecularLightDimmer = RemapLightingSystem.DefaultSunSpecularLightDimmer
+                },
+                new DebugUI.FloatField
+                {
+                    displayName = "Specular sun lightDimmer at 90 degrees",
+                    getter = () => RemapLightingSystem.SunSpecularZenithDimmer,
+                    setter = value =>
+                    {
+                        if (!float.IsNaN(value) && !float.IsInfinity(value))
+                            RemapLightingSystem.SunSpecularZenithDimmer = Mathf.Clamp01(value);
+                    },
+                    min = () => 0f,
+                    max = () => 1f,
+                    incStep = 0.01f
+                },
+                new DebugUI.Button
+                {
+                    displayName = "Reset specular sun lightDimmer at 90 degrees",
+                    action = () => RemapLightingSystem.SunSpecularZenithDimmer = RemapLightingSystem.DefaultSunSpecularZenithDimmer
+                },
+                new DebugUI.Value
+                {
+                    displayName = "Active specular sun lightDimmer",
+                    getter = () => RemapLightingSystem.ActiveSunSpecularLightDimmer
                 }
             };
         }
