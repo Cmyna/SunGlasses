@@ -72,14 +72,14 @@ All cloud settings, including distant clouds and volumetric clouds, can substant
   <Screenshot Value="Properties/Screenshots/HUGE_SUN.png" />
 	<Tag Value="Code Mod" />
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/sunglasses.1651414/" />
-	<ModVersion Value="2.4" />
+	<ModVersion Value="2.5" />
 	<GameVersion Value="1.*" />
   <!-- I18n every where -->
 	<Dependency Id="75426" />
   <ChangeLog>
-## SunGlasses 2.4
+## SunGlasses 2.5
 
-- Restored sunlight specular intensity to the 1.2 version (vanilla specular highlights).
+- Attempted to fix an issue where saved mod settings would not take effect after launching the game and loading a save.
   </ChangeLog>
   <ExternalLink Type="github" Url="https://github.com/Cmyna/SunGlasses" />
 </Publish>
