@@ -12,6 +12,7 @@ namespace SunGlasses.Systems
             if (float.IsNaN(minimum) || float.IsInfinity(minimum) || float.IsNaN(maximum) || float.IsInfinity(maximum) ||
                 minimum < -10 || maximum > 20 || minimum > maximum)
                 throw new ArgumentOutOfRangeException(nameof(minimum));
+            RefreshPreset();
             _manualMinimum = minimum;
             _manualMaximum = maximum;
             ManualOverrideEnabled = true;
@@ -20,6 +21,10 @@ namespace SunGlasses.Systems
         public void ClearManualOverride() { ManualOverrideEnabled = false; }
 
         partial void ResetExposureOverride() { ClearManualOverride(); }
+        partial void DescribeExposureOverride(ref string source)
+        {
+            if (ManualOverrideEnabled) source = "Temporary manual EV preview";
+        }
 
         partial void ApplyExposureOverride(ref ExposureSnapshot snapshot, ref string description)
         {

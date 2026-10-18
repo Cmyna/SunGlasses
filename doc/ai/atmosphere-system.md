@@ -4,7 +4,9 @@
 
 Atmosphere overrides are a production runtime feature managed by `AtmosphereSystem : GameSystemBase`, independent of the developer menu and custom MonoBehaviours. The saved Color Correction setting controls overrides and defaults to disabled. Numeric atmosphere parameters use a fixed default configuration and are not written to city saves.
 
-`AtmosphereParameters` is the single source of numeric configuration, used for both initialization and scene resource recreation. The system exposes TrySetParameters to accept a validated configuration copy, providing an entry point for a future settings page. The Debug Atmosphere section retains the Enable atmosphere overrides checkbox, which directly reads and writes the system's OverridesEnabled property. Debug 还提供地平线色调按太阳高度混合的开关和变白阈值；这些配置仅在当前会话有效，不写入 Setting 或城市存档。其余字段为只读诊断。
+正式配置由当前 `Mod.Setting` 实例唯一持有。大气系统每次更新直接读取 ColorCorrection；OverridesEnabled 仅为这个属性的只读派生状态，不再保存第二份开关。设置对象在系统创建前加载，构造默认比较实例及 SetDefaults 不改变运行系统。
+
+`AtmosphereParameters` 承载大气的数值默认值及会话实验配置，用于初始化和场景资源重建；TrySetParameters 接受校验后的配置副本。Debug 的色彩校正控件与设置页读写同一属性，通过 ApplyAndSave 保存，同时控制大气和基础太阳色调。地平线渐变开关及变白阈值仍仅在会话内生效，不写入 Setting 或城市存档。其余字段为只读诊断。
 
 ## Defaults and override scope
 
@@ -46,11 +48,13 @@ Each frame checks scene state, the sun Transform, and the original lighting Volu
 
 City preload suspends overrides and releases resources; loading completion permits recreation. System stop, mod disposal, and system destruction also release the Volume, Profile, and Profile components. If the scene destroys the host object itself, the system cleans up the old Profile before recreating resources. The game World can survive across cities, so resource cleanup does not depend on World destruction.
 
-OverridesEnabled controls atmosphere overrides themselves; the system's Enabled property controls updates and resource lifecycle. 设置中的独立“颜色校正”勾选项默认关闭，保存到模组设置，并在加载及应用设置时恢复。开启时启用大气覆盖，同时选择 Gentle warmth 太阳色调预设（RGB 0.76、0.85、1）；关闭时禁用大气覆盖，同时选择 Original / no tint 预设（白色）。原 Previous gentle warmth 预设更名为 Gentle warmth。现有按太阳高度向白色渐变的规则保持有效。选择曝光曲线“无”不会关闭颜色校正。Debug 对开关或色调的临时修改不写入保存设置，应用设置会恢复对应的预设。Disabling atmosphere overrides directly in Debug does not affect dynamic exposure or sun lighting. Re-enabling the system recreates resources using the retained configuration; restarting restores atmosphere parameters to defaults and loads the saved Color Correction switch.
+系统的 Enabled 控制更新与资源生命周期。正式“颜色校正”默认关闭：开启时启用大气覆盖，基础太阳色调为 Gentle warmth（RGB 0.76、0.85、1）；关闭时禁用大气覆盖，基础太阳色调为 Original / no tint（白色）。太阳按高度向白色渐变的规则保留，曝光预设与颜色校正互不控制。外部只修改 Setting 而不调用 Apply 时，下一次有效渲染更新仍使用新值。缺少当前设置时不执行覆盖。
+
+Sun 调试面板的太阳色调预设是明确标识、不保存的临时覆盖，面板显示基础设置与实际来源并提供清除入口。正式 ColorCorrection 值变化时清除该覆盖；修改无关设置不清除它，单纯调用 Apply 也不重置它。恢复默认按钮清除会话实验配置，再恢复并保存正式默认值。系统停止及场景加载释放资源，重建后重新读取当前设置；重启恢复大气数值默认值，并读取保存的 ColorCorrection。
 
 ## Debug diagnostics
 
-SunGlasses → Atmosphere provides the Enable atmosphere overrides checkbox and displays system status, whether the Volume is active, configured sky and fog/cloud parameters, effective main-camera parameters, and a camera match check. Unchecking disables the override Volume on the next PreCulling update; checking reapplies the current configuration.
+SunGlasses → Atmosphere 提供 Color correction (atmosphere and sun tint, saved) 复选框，修改同时保存正式色彩校正配置。下次 PreCulling 更新应用对应大气开关和基础太阳色调。面板继续显示系统状态、Volume 是否启用、大气参数、相机有效参数及一致性检查。
 
 **Blend horizon tint by elevation** 控制地平线渐变，**Horizon white tint threshold (degrees, 0.01-90)** 可输入变白角度，默认 20°。无效文本、非有限数和超范围输入保留上一份有效配置。**Horizon elevation / white weight / active tint** 显示太阳高度、白色混合比例与当前输出 RGB。Configured sky 显示基础色调；相机一致性检查使用当前渐变后的 ActiveHorizonTint。
 
@@ -60,6 +64,8 @@ Effective camera fog / clouds 仅展示游戏实际雾距。
 Atmosphere camera check compares the actively controlled parameters in the main camera's HDRP stack against the configuration. 自定义雾接管时跳过雾色比较，显示 Applied to main camera; fog delegated to custom fog，同时提供 Fog overrides suspended for custom fog 状态。It displays Applied to main camera when all controlled parameters match, Off when the system or overrides are disabled, Waiting when resources are not ready, and Mismatch for competing Volumes or camera-layer mismatches. Color checks compare RGB, and scalar checks use small absolute/relative error tolerances.
 
 ## Implementation alignment and verification
+
+2026-10-16：完成 Setting 单一正式配置来源改造。直接链接正式源码的离线回归覆盖反射赋值不调用 Apply、调试控件、临时覆盖清除、读档资源重建、系统停止恢复、缺少设置及自定义雾暂停恢复。替身仅检查写入值和覆盖标志，不代表 HDRP 相机混合或最终画面已验证。本次未部署、未发布；真实冷启动读档、同进程切换城市、Photo Mode 及视觉效果待游戏内回归。
 
 2026-10-12 后续反馈：恢复默认雾色 RGB (0.67,0.8075,1)，保留地面补光设置。
 Release 构建及官方后处理通过，零警告、零错误；已部署到本地 Mods，DLL 哈希一致。

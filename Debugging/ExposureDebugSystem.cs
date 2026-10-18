@@ -32,7 +32,8 @@ namespace SunGlasses.Debugging
         {
             try
             {
-                _runtime.ApplyPreset(preset);
+                _runtime.ClearTemporaryOverrides();
+                Mod.Setting?.Update(setting => setting.ExposureCurve = preset);
                 _status = "Using " + preset;
             }
             catch (Exception ex)
@@ -51,14 +52,17 @@ namespace SunGlasses.Debugging
                 new DebugUI.BoolField
                 {
                     displayName = "Enable dynamic exposure",
-                    getter = () => _runtime.DynamicEnabled,
+                    getter = () => Mod.Setting != null && Mod.Setting.ExposureCurve != Setting.ExposureCurvePreset.None,
                     setter = value =>
                     {
-                        if (value && _runtime.ActiveCurve == "None")
+                        if (!value) UsePreset(Setting.ExposureCurvePreset.None);
+                        else if (Mod.Setting?.ExposureCurve == Setting.ExposureCurvePreset.None)
                             UsePreset(Setting.ExposureCurvePreset.Realistic);
-                        else _runtime.DynamicEnabled = value;
                     }
                 },
+                new DebugUI.Value { displayName = "Saved exposure preset", getter = () => _runtime.SelectedPreset },
+                new DebugUI.Value { displayName = "Exposure source", getter = () => _runtime.ExposureSource },
+                new DebugUI.Button { displayName = "Clear temporary exposure overrides", action = _runtime.ClearTemporaryOverrides },
                 new DebugUI.Value { displayName = "Runtime exposure curve", getter = () => _runtime.ActiveCurve },
                 new DebugUI.Value { displayName = "Solar elevation", getter = SolarElevation },
                 new DebugUI.Value { displayName = "Solar arc angle", getter = SolarArcAngleText },

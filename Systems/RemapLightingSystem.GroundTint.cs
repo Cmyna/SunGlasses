@@ -7,21 +7,9 @@ namespace SunGlasses.Systems
     public partial class RemapLightingSystem
     {
         private const string GroundTintVolumeName = "Render Settings";
-        private static float groundTintWeight = 0f;
         private readonly GroundTintOverride groundTint = new GroundTintOverride();
         private float groundTintElevation;
         private float groundTintAppliedWeight;
-
-        // Options persist the daytime weight; Debug can temporarily override it.
-        internal static float GroundTintWeight
-        {
-            get => groundTintWeight;
-            set
-            {
-                if (!float.IsNaN(value) && !float.IsInfinity(value))
-                    groundTintWeight = Mathf.Clamp01(value);
-            }
-        }
 
         internal string GroundTintStatus => groundTint.IsBound
             ? $"Elevation {groundTintElevation:F2} deg; original weight {groundTintAppliedWeight:P0}; original {groundTint.Original}; applied {groundTint.Applied}"
@@ -36,7 +24,9 @@ namespace SunGlasses.Systems
                 return;
             }
             groundTintElevation = Mathf.Asin(Mathf.Clamp(-sun.light.transform.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
-            groundTintAppliedWeight = GroundTintOverride.WeightForElevation(groundTintElevation, GroundTintWeight);
+            var weight = Mod.Setting.GroundFillLight;
+            if (float.IsNaN(weight) || float.IsInfinity(weight)) weight = 1f;
+            groundTintAppliedWeight = GroundTintOverride.WeightForElevation(groundTintElevation, Mathf.Clamp01(weight));
             var go = GameObject.Find(GroundTintVolumeName);
             var volume = go != null ? go.GetComponent<Volume>() : null;
             // The game uses an instantiated profile; editing sharedProfile has no live effect.
@@ -50,7 +40,7 @@ namespace SunGlasses.Systems
 
         protected override void OnStopRunning()
         {
-            ReleaseGroundTint();
+            Shutdown();
             base.OnStopRunning();
         }
     }

@@ -65,7 +65,7 @@ namespace SunGlasses.Debugging
         }
         public bool CustomEnabled
         {
-            get => _runtime.ActiveCurve == "Custom";
+            get => _runtime.CustomCurveEnabled;
             set
             {
                 if (value) ApplyCustomCurve();
@@ -73,7 +73,7 @@ namespace SunGlasses.Debugging
                 {
                     try
                     {
-                        _runtime.ApplyPreset(_runtime.SelectedPreset);
+                        _runtime.ClearTemporaryOverrides();
                         ResetPreview();
                         _status = "Custom curve disabled; preset restored";
                     }
@@ -157,7 +157,7 @@ namespace SunGlasses.Debugging
                 points[i] = new ExposureCurve.Point { timeOfDayHours = p.timeOfDayHours, solarElevationDegrees = p.solarElevationDegrees,
                     centerEv100 = p.centerEv100, widthEv100 = p.widthEv100 };
             }
-            try { _runtime.SetCurve(new ExposureCurve(points), "Custom"); ResetPreview(); _status = "Custom curve applied"; }
+            try { _runtime.SetCustomCurve(new ExposureCurve(points)); ResetPreview(); _status = "Custom curve applied (temporary)"; }
             catch (Exception ex) { _status = "Custom curve rejected: " + ex.Message; }
         }
         private void SetTime(float hours)

@@ -21,8 +21,12 @@ namespace SunGlasses.Debugging
                 new DebugUI.FloatField
                 {
                     displayName = "Daytime ground tint weight (0 = black, 1 = original)",
-                    getter = () => RemapLightingSystem.GroundTintWeight,
-                    setter = value => RemapLightingSystem.GroundTintWeight = value,
+                    getter = () => Mod.Setting?.GroundFillLight ?? 1f,
+                    setter = value =>
+                    {
+                        if (!float.IsNaN(value) && !float.IsInfinity(value))
+                            Mod.Setting?.Update(setting => setting.GroundFillLight = Mathf.Clamp01(value));
+                    },
                     min = () => 0f,
                     max = () => 1f,
                     incStep = 0.01f
@@ -35,9 +39,9 @@ namespace SunGlasses.Debugging
                 },
                 new DebugUI.BoolField
                 {
-                    displayName = "Enable atmosphere overrides",
-                    getter = () => system.OverridesEnabled,
-                    setter = value => system.OverridesEnabled = value
+                    displayName = "Color correction (atmosphere and sun tint, saved)",
+                    getter = () => Mod.Setting?.ColorCorrection ?? false,
+                    setter = value => Mod.Setting?.Update(setting => setting.ColorCorrection = value)
                 },
                 new DebugUI.Value { displayName = "Atmosphere status", getter = () => system.Status },
                 new DebugUI.Value { displayName = "Atmosphere Volume active", getter = () => system.VolumeActive },

@@ -27,6 +27,10 @@
     <ItemGroup Condition="'$(Configuration)' != 'Debug'">
       <Compile Remove="**\*.Debug.cs" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="Tests\**" />
+      <None Remove="Tests\**" />
+    </ItemGroup>
 
 	<!-- Build with -p:DeployLocalMod=false while the game is running. -->
 	<Target Name="DeployWIP" AfterTargets="AfterBuild" Condition="'$(NeedBuild)' and '$(DeployLocalMod)' != 'false'">

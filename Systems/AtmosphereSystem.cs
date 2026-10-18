@@ -26,7 +26,7 @@ namespace SunGlasses.Systems
         private bool _loading;
 
         public AtmosphereParameters Parameters { get; private set; } = AtmosphereParameters.Defaults;
-        public bool OverridesEnabled { get; set; } = true;
+        public bool OverridesEnabled => Mod.Setting != null && Mod.Setting.ColorCorrection;
         public bool VolumeActive => _volume != null && _volume.enabled;
         public bool FogOverridesSuspended { get; private set; }
         public float HorizonTintElevation { get; private set; }
@@ -51,7 +51,7 @@ namespace SunGlasses.Systems
 
         protected override void OnUpdate()
         {
-            if (_loading || !_planetary.SunLight.isValid || _planetary.SunLight.transform == null)
+            if (Mod.Setting == null || _loading || !_planetary.SunLight.isValid || _planetary.SunLight.transform == null)
             {
                 SetDormant("Waiting for lighting scene");
                 return;

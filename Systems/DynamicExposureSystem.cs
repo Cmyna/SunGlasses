@@ -24,43 +24,78 @@ namespace SunGlasses.Systems
         private VolumeProfile _profile;
         private Exposure _exposure;
         private ExposureCurve _curve;
+        private ExposureCurve _customCurve;
+        private bool _presetInitialized;
+        private Setting.ExposureCurvePreset _loadedPreset;
+        private string _curveName = "None";
         private GameObject _originalVolume;
         private ExposureSnapshot _snapshot;
         partial void ResetExposureOverride();
         partial void ApplyExposureOverride(ref ExposureSnapshot snapshot, ref string description);
-        public bool DynamicEnabled { get; set; } = true;
-        public Setting.ExposureCurvePreset SelectedPreset { get; private set; } = Setting.ExposureCurvePreset.Realistic;
-        public string ActiveCurve { get; private set; } = "realistic";
+        partial void DescribeExposureOverride(ref string source);
+        public bool DynamicEnabled => Mod.Setting != null && (SelectedPreset != Setting.ExposureCurvePreset.None || _customCurve != null);
+        public Setting.ExposureCurvePreset SelectedPreset => Mod.Setting?.ExposureCurve ?? Setting.ExposureCurvePreset.None;
+        public bool CustomCurveEnabled => _customCurve != null;
+        public string ActiveCurve => _customCurve != null ? "Custom" : _curveName;
+        public string ExposureSource
+        {
+            get
+            {
+                var source = _customCurve != null ? "Temporary custom curve" : "Setting: " + SelectedPreset + " (" + _curveName + ")";
+                DescribeExposureOverride(ref source);
+                return source;
+            }
+        }
         public string InterpolationDescription { get; private set; } = "Waiting for sun";
         protected override void OnCreate()
         {
             base.OnCreate();
             _planetary = World.GetOrCreateSystemManaged<PlanetarySystem>();
-            try { SetCurve(ExposureCurve.LoadBundled("realistic"), "realistic"); }
-            catch (Exception ex) { Mod.Log.Error("Could not load default exposure curve: " + ex.Message); }
         }
-        protected override void OnUpdate() { EnsureVolume(); ApplyExposure(); }
-        public void SetCurve(ExposureCurve curve, string name)
+        protected override void OnUpdate()
+        {
+            if (Mod.Setting == null) { Shutdown(); return; }
+            RefreshPreset();
+            EnsureVolume();
+            ApplyExposure();
+        }
+        // Cache resources by the observed value, never use the cache as the user's selection.
+        private void RefreshPreset()
+        {
+            var preset = SelectedPreset;
+            if (_presetInitialized && _loadedPreset == preset) return;
+            _presetInitialized = true;
+            _loadedPreset = preset;
+            _customCurve = null;
+            ResetExposureOverride();
+            _curve = null;
+            _curveName = "None";
+            if (preset == Setting.ExposureCurvePreset.None) return;
+            try
+            {
+                if (preset != Setting.ExposureCurvePreset.Bright && preset != Setting.ExposureCurvePreset.Realistic)
+                    throw new ArgumentOutOfRangeException(nameof(preset));
+                var name = preset == Setting.ExposureCurvePreset.Bright ? "bright" : "realistic";
+                _curve = ExposureCurve.LoadBundled(name);
+                _curveName = name;
+            }
+            catch (Exception ex)
+            {
+                _curveName = "Unavailable";
+                Mod.Log.Error("Could not load exposure preset " + preset + ": " + ex.Message);
+            }
+        }
+        public void SetCustomCurve(ExposureCurve curve)
         {
             if (curve == null) throw new ArgumentNullException(nameof(curve));
-            _curve = curve; ActiveCurve = name; DynamicEnabled = true;
-        }
-        public void ApplyPreset(Setting.ExposureCurvePreset preset)
-        {
-            if (preset == Setting.ExposureCurvePreset.None)
-            {
-                ResetExposureOverride();
-                _curve = null;
-                ActiveCurve = "None";
-                SelectedPreset = preset;
-                DynamicEnabled = false;
-                return;
-            }
-            var name = preset == Setting.ExposureCurvePreset.Bright ? "bright" : "realistic";
-            if (_curve == null || ActiveCurve != name) SetCurve(ExposureCurve.LoadBundled(name), name);
+            RefreshPreset();
+            _customCurve = curve;
             ResetExposureOverride();
-            SelectedPreset = preset;
-            DynamicEnabled = true;
+        }
+        public void ClearTemporaryOverrides()
+        {
+            _customCurve = null;
+            ResetExposureOverride();
         }
         public ExposureSnapshot GetSnapshot() => _snapshot;
         private ExposureSnapshot CalculateSnapshot()
@@ -74,7 +109,8 @@ namespace SunGlasses.Systems
             ApplyExposureOverride(ref snapshot, ref description);
             if (!snapshot.Ready)
             {
-                if (!DynamicEnabled || _curve == null || !_curve.Evaluate(snapshot.SolarElevationDegrees, snapshot.TimeOfDayHours,
+                var curve = _customCurve ?? _curve;
+                if (curve == null || !curve.Evaluate(snapshot.SolarElevationDegrees, snapshot.TimeOfDayHours,
                     out var minimum, out var maximum, out description)) return snapshot;
                 snapshot.MinimumEv100 = minimum;
                 snapshot.MaximumEv100 = maximum;
@@ -121,6 +157,7 @@ namespace SunGlasses.Systems
         {
             if (_volume != null) _volume.enabled = false;
             if (_host != null) UnityEngine.Object.Destroy(_host);
+            if (_exposure != null) UnityEngine.Object.Destroy(_exposure);
             if (_profile != null) UnityEngine.Object.Destroy(_profile);
             _host = null; _volume = null; _profile = null; _exposure = null;
             _originalVolume = null; _snapshot = default;
@@ -128,6 +165,10 @@ namespace SunGlasses.Systems
         public void Shutdown()
         {
             ResetExposureOverride();
+            _customCurve = null;
+            _curve = null;
+            _curveName = "None";
+            _presetInitialized = false;
             ReleaseVolume();
         }
         protected override void OnStopRunning() { Shutdown(); base.OnStopRunning(); }

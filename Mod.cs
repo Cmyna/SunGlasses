@@ -17,7 +17,7 @@ namespace SunGlasses
     public class Mod : IMod
     {
         public static ILog Log = LogManager.GetLogger($"{nameof(SunGlasses)}").SetShowsErrorsInUI(true);
-        private Setting m_Setting;
+        public static Setting Setting { get; private set; }
 
         private RemapLightingSystem _remapLightingSystem;
         private DynamicExposureSystem _dynamicExposureSystem;
@@ -30,19 +30,21 @@ namespace SunGlasses
 
             if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset)) Log.Info($"Current mod asset at {asset.path}");
 
+            Setting = new Setting(this);
+            Setting.RegisterInOptionsUI();
+            GameManager.instance.localizationManager.AddSource("en-US", new SimpleLocale(Setting));
+            AssetDatabase.global.LoadSettings(nameof(SunGlasses), Setting, new Setting(this));
+
             _remapLightingSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<RemapLightingSystem>();
             _remapLightingSystem.Enabled = true;
             _dynamicExposureSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<DynamicExposureSystem>();
+            _dynamicExposureSystem.Enabled = true;
             _exposureDebugSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<ExposureDebugSystem>();
+            _exposureDebugSystem.Enabled = true;
             _atmosphereSystem = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<AtmosphereSystem>();
-
-            m_Setting = new Setting(this, _dynamicExposureSystem, _atmosphereSystem);
-            m_Setting.RegisterInOptionsUI();
-            GameManager.instance.localizationManager.AddSource("en-US", new SimpleLocale(m_Setting));
-
-            AssetDatabase.global.LoadSettings(nameof(SunGlasses), m_Setting, new Setting(this, _dynamicExposureSystem, _atmosphereSystem));
-            // Loading persisted values does not push them into the rendering system.
-            m_Setting.Apply();
+            _atmosphereSystem.Enabled = true;
+            ResetTemporaryOverrides();
+            Setting.Apply();
 
             // update system
             // Copy this frame's sun after vanilla updates its intensity and color.
@@ -50,6 +52,16 @@ namespace SunGlasses
             updateSystem.UpdateAfter<DynamicExposureSystem, RemapLightingSystem>(SystemUpdatePhase.PreCulling);
             updateSystem.UpdateAfter<AtmosphereSystem, DynamicExposureSystem>(SystemUpdatePhase.PreCulling);
             updateSystem.UpdateAt<ExposureDebugSystem>(SystemUpdatePhase.MainLoop);
+        }
+
+        internal static void ResetTemporaryOverrides()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+            world.GetExistingSystemManaged<ExposureDebugSystem>()?.Shutdown();
+            world.GetExistingSystemManaged<RemapLightingSystem>()?.ResetTemporaryOverrides();
+            world.GetExistingSystemManaged<DynamicExposureSystem>()?.ClearTemporaryOverrides();
+            world.GetExistingSystemManaged<AtmosphereSystem>()?.TrySetParameters(AtmosphereParameters.Defaults);
         }
 
         public void OnDispose()
@@ -61,14 +73,13 @@ namespace SunGlasses
             if (_remapLightingSystem != null)
             {
                 _remapLightingSystem.Enabled = false;
-                _remapLightingSystem.ReleaseGroundTint();
-                _remapLightingSystem.ReleaseSunTint();
-                _remapLightingSystem.ReleaseSunSpecularLight();
+                _remapLightingSystem.Shutdown();
             }
-            if (m_Setting != null)
+            ResetTemporaryOverrides();
+            if (Setting != null)
             {
-                m_Setting.UnregisterInOptionsUI();
-                m_Setting = null;
+                Setting.UnregisterInOptionsUI();
+                Setting = null;
             }
         }
     }

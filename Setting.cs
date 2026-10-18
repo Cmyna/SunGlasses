@@ -8,6 +8,7 @@ using SunGlasses.Systems;
 using Game.Modding;
 using Game.Settings;
 using Game.UI;
+using System;
 using System.Collections.Generic;
 
 namespace SunGlasses
@@ -43,13 +44,8 @@ namespace SunGlasses
 
         public const float DefaultMultiplier = 1f;
 
-        private readonly DynamicExposureSystem _dynamicExposureSystem;
-        private readonly AtmosphereSystem _atmosphereSystem;
-
-        public Setting(IMod mod, DynamicExposureSystem dynamicExposureSystem, AtmosphereSystem atmosphereSystem) : base(mod)
+        public Setting(IMod mod) : base(mod)
         {
-            _dynamicExposureSystem = dynamicExposureSystem;
-            _atmosphereSystem = atmosphereSystem;
             SetDefaults();
         }
 
@@ -108,9 +104,10 @@ namespace SunGlasses
         {
             set
             {
+                if (ReferenceEquals(this, Mod.Setting)) Mod.ResetTemporaryOverrides();
                 SetDefaults(); // Apply defaults.
                 EnsureUpdate();
-                Apply();
+                ApplyAndSave();
             }
         }
 
@@ -147,25 +144,14 @@ namespace SunGlasses
             IndirectDiffuseSunLighting = RemapLightingSystem.VanillaIndirectDiffuseLighting;
             GroundFillLight = 1f;
             LensFlare = true;
-            RemapLightingSystem.InternalVolumePriority = 2500;
         }
 
-        public override void Apply()
+        // Runtime systems read this instance directly, including external writes without Apply.
+        public void Update(Action<Setting> update)
         {
-            _dynamicExposureSystem.ApplyPreset(ExposureCurve);
-            _atmosphereSystem.OverridesEnabled = ColorCorrection;
-            RemapLightingSystem.SunTintPreset = ColorCorrection
-                ? RemapLightingSystem.GentleWarmthSunTintPreset
-                : RemapLightingSystem.OriginalSunTintPreset;
-            RemapLightingSystem.EnableLensFlare = LensFlare;
-            RemapLightingSystem.IndirectLightingMultipilier = IndirectDiffuseSunLighting;
-            RemapLightingSystem.GroundTintWeight = GroundFillLight;
-            RemapLightingSystem.InternalVolumePriority = 2500;
-            RemapLightingSystem.SkyExposure = SkyExposure;
-            RemapLightingSystem.SunBloomMultiplier = SunBloom;
-            RemapLightingSystem.SunLightIntensity = SunLightIntensity;
-            RemapLightingSystem.SunSizeMultiplier = SunSize;
-            base.Apply();
+            if (update == null) throw new ArgumentNullException(nameof(update));
+            update(this);
+            ApplyAndSave();
         }
 
 

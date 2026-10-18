@@ -6,8 +6,37 @@ namespace SunGlasses.Systems
     {
         internal const int OriginalSunTintPreset = 0;
         internal const int GentleWarmthSunTintPreset = 4;
-        // Settings select the default; Debug can temporarily choose another preset.
-        internal static int SunTintPreset = GentleWarmthSunTintPreset;
+        private static int? _temporarySunTintPreset;
+        private static bool? _observedColorCorrection;
+        internal static int BaseSunTintPreset => Mod.Setting != null && Mod.Setting.ColorCorrection
+            ? GentleWarmthSunTintPreset : OriginalSunTintPreset;
+        internal static bool SunTintOverrideActive
+        {
+            get { ObserveColorCorrection(); return _temporarySunTintPreset.HasValue; }
+        }
+        internal static int SunTintPreset
+        {
+            get { ObserveColorCorrection(); return _temporarySunTintPreset ?? BaseSunTintPreset; }
+            set
+            {
+                ObserveColorCorrection();
+                if (value >= 0 && value < SunTintColors.Length) _temporarySunTintPreset = value;
+            }
+        }
+        private static void ObserveColorCorrection()
+        {
+            var enabled = Mod.Setting?.ColorCorrection;
+            if (_observedColorCorrection != enabled)
+            {
+                _temporarySunTintPreset = null;
+                _observedColorCorrection = enabled;
+            }
+        }
+        internal static void ClearSunTintOverride()
+        {
+            _temporarySunTintPreset = null;
+            _observedColorCorrection = Mod.Setting?.ColorCorrection;
+        }
         internal static bool SunTintBlendByElevation = true;
         internal static float SunTintWhiteAngle = 10f;
         internal static float SunTintElevation;

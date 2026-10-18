@@ -19,9 +19,25 @@ namespace SunGlasses.Debugging
             }
             return new List<DebugUI.Widget>
             {
+                new DebugUI.Value
+                {
+                    displayName = "Saved color correction",
+                    getter = () => Mod.Setting?.ColorCorrection ?? false
+                },
+                new DebugUI.Value
+                {
+                    displayName = "Sun tint source",
+                    getter = () => RemapLightingSystem.SunTintOverrideActive
+                        ? "Temporary preset override" : "Setting: " + RemapLightingSystem.SunTintNames[RemapLightingSystem.BaseSunTintPreset]
+                },
+                new DebugUI.Button
+                {
+                    displayName = "Clear temporary sun tint preset",
+                    action = RemapLightingSystem.ClearSunTintOverride
+                },
                 new DebugUI.EnumField
                 {
-                    displayName = "Sun tint preset",
+                    displayName = "Temporary sun tint preset (not saved)",
                     enumNames = names,
                     enumValues = values,
                     getter = () => RemapLightingSystem.SunTintPreset,

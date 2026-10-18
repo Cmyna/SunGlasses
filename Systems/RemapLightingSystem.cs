@@ -43,19 +43,7 @@ namespace SunGlasses.Systems
         public IntParameter VolumePriority = new IntParameter(2500, false);
 
 
-        internal static int InternalVolumePriority = 2500;
-
-        internal static float SunSizeMultiplier = 1f;
-
-        internal static float SunBloomMultiplier = 1f;
-
-        internal static float SkyExposure = VanillaSkyExposure;
-
-        internal static float SunLightIntensity = DefaultPbSunIntensity;
-
-        internal static float IndirectLightingMultipilier = VanillaIndirectDiffuseLighting;
-
-        internal static bool EnableLensFlare = true;
+        internal const int DefaultVolumePriority = 2500;
 
         private Volume remapVolume;
 
@@ -67,22 +55,29 @@ namespace SunGlasses.Systems
         protected override void OnCreate()
         {
             base.OnCreate();
-            remapVolume = VolumeHelper.CreateVolume("RemapLightVolume", InternalVolumePriority);
+            remapVolume = VolumeHelper.CreateVolume("RemapLightVolume", DefaultVolumePriority);
             VolumeHelper.GetOrCreateVolumeComponent(remapVolume, ref globalBloom);
             planetarySystem = World.GetOrCreateSystemManaged<PlanetarySystem>();
         }
 
         protected override void OnUpdate()
         {
+            var settings = Mod.Setting;
+            if (settings == null) { Shutdown(); return; }
+            if (remapVolume == null)
+            {
+                remapVolume = VolumeHelper.CreateVolume("RemapLightVolume", DefaultVolumePriority);
+                VolumeHelper.GetOrCreateVolumeComponent(remapVolume, ref globalBloom);
+            }
             UpdatePriority();
 
             // override vanilla lighting system
-            TryUpdateVanillaLighting();
+            TryUpdateVanillaLighting(settings);
             UpdateGroundTint();
-            TryUpdateLensFlareComponent();
+            TryUpdateLensFlareComponent(settings.LensFlare);
 
-            OverrideSunSize(SunSizeMultiplier);
-            OverrideSunBloom(SunBloomMultiplier);
+            OverrideSunSize(settings.SunSize);
+            OverrideSunBloom(settings.SunBloom);
             UpdateSunTint();
             UpdateSunSpecularLight();
 
@@ -111,30 +106,60 @@ namespace SunGlasses.Systems
         /// <summary>
         /// try get Physically Base Sky 
         /// </summary>
-        private void TryUpdateVanillaLighting()
+        private void TryUpdateVanillaLighting(Setting settings)
         {
             if (!TryGetVanillaLighting(out var volume, out var sky, out var controller))
             {
                 return;
             }
-            sky.exposure.Override(SkyExposure);
-            controller.indirectDiffuseLightingMultiplier.Override(IndirectLightingMultipilier);
+            sky.exposure.Override(settings.SkyExposure);
+            controller.indirectDiffuseLightingMultiplier.Override(settings.IndirectDiffuseSunLighting);
         }
 
         private void UpdatePriority()
         {
-            var priority = InternalVolumePriority;
+            var priority = DefaultVolumePriority;
             if (VolumePriority.overrideState) priority = VolumePriority.value;
             if (remapVolume.priority != priority) remapVolume.priority = priority;
         }
 
-        private void TryUpdateLensFlareComponent()
+        private void TryUpdateLensFlareComponent(bool enabled)
         {
             if (!TryGetLensFlareComponent(out var comp))
             {
                 return;
             }
-            comp.enabled = EnableLensFlare;
+            comp.enabled = enabled;
+        }
+
+        internal void ResetTemporaryOverrides()
+        {
+            ClearSunTintOverride();
+            SunTintBlendByElevation = true;
+            SunTintWhiteAngle = 10f;
+            EnableSunSpecularLight = false;
+            SunSpecularLightDimmer = DefaultSunSpecularLightDimmer;
+            SunSpecularZenithDimmer = DefaultSunSpecularZenithDimmer;
+            VolumePriority.overrideState = false;
+        }
+
+        internal void Shutdown()
+        {
+            ReleaseGroundTint();
+            ReleaseSunTint();
+            ReleaseSunSpecularLight();
+            if (remapVolume != null)
+            {
+                var profile = remapVolume.sharedProfile;
+                if (profile != null)
+                {
+                    foreach (var component in profile.components) UnityEngine.Object.Destroy(component);
+                    UnityEngine.Object.Destroy(profile);
+                }
+                UnityEngine.Object.Destroy(remapVolume.gameObject);
+            }
+            remapVolume = null;
+            globalBloom = null;
         }
 
 

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <Compile Include="../../Mod.cs" Link="Production/Mod.cs" />
+    <Compile Include="../../Setting.cs" Link="Production/Setting.cs" />
+    <Compile Include="../../Systems/RemapLightingSystem.cs" Link="Production/RemapLightingSystem.cs" />
+    <Compile Include="../../Systems/RemapLightingSystem.SunTint.cs" Link="Production/SunTint.cs" />
+    <Compile Include="../../Systems/RemapLightingSystem.GroundTint.cs" Link="Production/GroundTint.cs" />
+    <Compile Include="../../Systems/GroundTintOverride.cs" Link="Production/GroundTintOverride.cs" />
+    <Compile Include="../../Systems/AtmosphereSystem.cs" Link="Production/AtmosphereSystem.cs" />
+    <Compile Include="../../Systems/AtmosphereParameters.cs" Link="Production/AtmosphereParameters.cs" />
+    <Compile Include="../../Systems/DynamicExposureSystem.cs" Link="Production/DynamicExposureSystem.cs" />
+    <Compile Include="../../Systems/DynamicExposureSystem.Debug.cs" Link="Production/ManualExposure.cs" />
+    <Compile Include="../../Systems/ExposureCurve.cs" Link="Production/ExposureCurve.cs" />
+    <Compile Include="../../Debugging/ExposureDebugSystem.cs" Link="Production/ExposureDebugSystem.cs" />
+    <Compile Include="../../Debugging/AtmosphereDebugTab.cs" Link="Production/AtmosphereDebugTab.cs" />
+    <Compile Include="../../Debugging/SunLightingDebugTab.cs" Link="Production/SunLightingDebugTab.cs" />
+    <EmbeddedResource Include="../../Resources/exposure-curve/bright.json">
+      <LogicalName>SunGlasses.ExposureCurves.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="../../Resources/exposure-curve/realistic.json" Condition="'$(OmitRealisticCurve)' != 'true'">
+      <LogicalName>SunGlasses.ExposureCurves.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
